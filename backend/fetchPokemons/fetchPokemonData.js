@@ -1,5 +1,5 @@
 // Function to fetch Pokémon data from API
-async function fetchPokemonData(numbOfPokemons) {
+export async function fetchPokemonData(numbOfPokemons) {
     const query = `
       {
         pokemon_v2_pokemon(limit: ${numbOfPokemons}) {
@@ -39,5 +39,3 @@ async function fetchPokemonData(numbOfPokemons) {
     const data = await response.json();
     return data.data.pokemon_v2_pokemon;
 }
-
-module.exports = fetchPokemonData;

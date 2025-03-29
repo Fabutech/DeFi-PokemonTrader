@@ -5,7 +5,7 @@ import { ethers } from "ethers";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
 
-const fetchPokemonData = require("./fetchPokemonData");
+import { fetchPokemonData } from "./fetchPokemonData.js";
 
 
 // CONSTANTS
@@ -29,10 +29,16 @@ async function uploadToIPFS(helia, metadata) {
   }
   
   // Mint NFT on Ethereum (Hardhat local node)
-  async function mintNFT(signer, nftContract, recipient, tokenURI) {
-    const mintTx = await nftContract.mintTo(recipient, tokenURI);
-    await mintTx.wait();
-    console.log(`✅ Minted NFT for: ${recipient}, TokenURI: ${tokenURI}`);
+  async function mintNFT(signer, nftContract, recipient, ipfsURI) {
+    const tx = await nftContract.mintTo(recipient, ipfsURI);
+    const txResponse = await signer.sendTransaction({
+        to: nftContract.address,
+        data: tx.data,
+        maxFeePerGas: ethers.parseUnits("20", "gwei"),  // Adjust this as needed
+        maxPriorityFeePerGas: ethers.parseUnits("2", "gwei"),
+      });
+      await txResponse.wait();
+    console.log(`✅ Minted NFT for: ${recipient}, TokenURI: ${ipfsURI}`);
   }
   
   // Main function
@@ -42,9 +48,9 @@ async function uploadToIPFS(helia, metadata) {
   
     // Ethereum setup (Hardhat local node)
     const provider = new ethers.JsonRpcProvider("http://localhost:8545");
-    const signer = provider.getSigner();
+    const signer = await provider.getSigner();
     const nftContractAddress = contractAddress;
-    const nftABI = ["function mintTo(address recipient, string memory tokenURI) public"];
+    const nftABI = ["function mintTo(address _to, string memory _uri) public"];
     const nftContract = new ethers.Contract(nftContractAddress, nftABI, signer);
   
     for (const pokemon of pokemons) {
@@ -68,6 +74,8 @@ async function uploadToIPFS(helia, metadata) {
     }
   
     console.log("✅ All Pokémon NFTs minted!");
+
+    return;
   }
   
   fetchAndMintPokemons(contractAddress, ownerAddress).catch(console.error);
