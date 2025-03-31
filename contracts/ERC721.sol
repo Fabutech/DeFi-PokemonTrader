@@ -108,6 +108,23 @@ contract ERC721 {
         nextTokenIdToMint += 1;
     }
 
+    function batchMint(address _to, string[] memory _uris) public onlyContractOwner validAddress(_to) {
+        require(_uris.length > 0, "ERC721: Must provide at least one URI");
+
+        uint256 startTokenId = nextTokenIdToMint;
+        uint256 numberOfTokens = _uris.length;
+
+        for (uint256 i = 0; i < numberOfTokens; i++) {
+            _owners[startTokenId + i] = _to;
+            _tokenUris[startTokenId + i] = _uris[i];
+
+            emit Transfer(address(0), _to, startTokenId + i);
+        }
+
+        _balances[_to] += numberOfTokens;
+        nextTokenIdToMint += numberOfTokens;
+    }
+
     function tokenURI(uint256 _tokenId) public view tokenExists(_tokenId) returns(string memory) {
         return _tokenUris[_tokenId];
     }
