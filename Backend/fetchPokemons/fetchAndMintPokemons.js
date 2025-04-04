@@ -25,7 +25,9 @@ async function deployNFTContract() {
   
   const contractAddress = await nftContract.getAddress();
 
+  console.log(`${time()} Starting to setup contract event listener`);
   setupEventListener(contractAddress);
+  console.log(`${time()} ✅ Successfully setup event listener`);
   
   return contractAddress;
 }

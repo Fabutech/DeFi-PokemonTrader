@@ -30,7 +30,7 @@ export function setupEventListener(contractAddress) {
 
     // Listen for Transfer events
     contract.on("Transfer", async (from, to, tokenId) => {
-        console.log(`Token ID ${tokenId} transferred from ${from} to ${to}`);
+        console.log(`${time()} Token ID ${tokenId} transferred from ${from} to ${to}`);
 
         try {
             // Check if tokenId exists in the DB
@@ -41,15 +41,13 @@ export function setupEventListener(contractAddress) {
                 existingRecord.ownerAddress = to;
                 existingRecord.lastUpdated = Date.now();
                 await existingRecord.save();
-                console.log(`Updated owner of tokenId ${tokenId} to ${to}`);
             } else {
                 // If the token is new, create a new record
                 const newOwnership = new NFTOwnership({ tokenId, ownerAddress: to });
                 await newOwnership.save();
-                console.log(`Added new tokenId ${tokenId} with owner ${to}`);
             }
         } catch (error) {
-            console.error('Error processing Transfer event:', error);
+            console.log(`${time()} Error processing Transfer event: ${error}`);
         }
     });
 }
@@ -62,8 +60,17 @@ async function connectMongoDB() {
         useUnifiedTopology: true
       });
       mongooseConnected = true;
-      console.log('Connected to MongoDB');
+      console.log(`${time()} Connected to MongoDB`);
     } catch (error) {
       console.error('MongoDB connection error:', error);
     }
+  }
+
+  // Helper function to get current time
+function time() {
+    const today = new Date();
+    const date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+    const time = (today.getHours() + 2) + ":" + today.getMinutes() + ":" + today.getSeconds();
+  
+    return "[" + date + " " + time + "]";
   }
