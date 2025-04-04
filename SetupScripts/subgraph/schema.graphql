@@ -1,0 +1,13 @@
+type MintEvent @entity {
+  id: ID!
+  from: Bytes!
+  to: Bytes!
+  tokenId: BigInt!
+}
+
+type Pokemon @entity {
+  id: ID!
+  owner: Bytes!
+  tokenId: BigInt!
+  metadataUri: String!
+}

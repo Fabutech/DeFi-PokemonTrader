@@ -16,7 +16,7 @@ async function deployNFTContract() {
   const signer = await provider.getSigner(); // Get first signer (default deployer)
   
   // Load contract ABI and bytecode (from compilation output)
-  const contractJSON = JSON.parse(fs.readFileSync("../../artifacts/contracts/ERC721.sol/ERC721.json", "utf8"));
+  const contractJSON = JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/ERC721.sol/ERC721.json", "utf8"));
   
   // Deploy the contract
   const NFTContract = new ethers.ContractFactory(contractJSON.abi, contractJSON.bytecode, signer);
