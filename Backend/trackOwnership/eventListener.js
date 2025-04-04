@@ -30,7 +30,7 @@ export function setupEventListener(contractAddress) {
 
     // Listen for Transfer events
     contract.on("Transfer", async (from, to, tokenId) => {
-        console.log(`${time()} Token ID ${tokenId} transferred from ${from} to ${to}`);
+        //console.log(`${time()} Token ID ${tokenId} transferred from ${from} to ${to}`);
 
         try {
             // Check if tokenId exists in the DB

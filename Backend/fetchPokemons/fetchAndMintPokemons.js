@@ -32,6 +32,24 @@ async function deployNFTContract() {
   return contractAddress;
 }
 
+async function deployTradingContract(signer, nftContractAddress) {
+  const contractJSON = JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/TradingContract.sol/TradingContract.json", "utf8"));
+  const TradingContract = new ethers.ContractFactory(contractJSON.abi, contractJSON.bytecode, signer);
+  const tradingContract = await TradingContract.deploy(nftContractAddress);
+  await tradingContract.waitForDeployment();
+  
+  const contractAddress = await tradingContract.getAddress();
+  console.log(`${time()} 🚀 Trading Contract deployed at: ${contractAddress}`);
+  
+  return tradingContract;
+}
+
+async function approveTradingContract(signer, nftContract, tradingContractAddress) {
+  const tx = await nftContract.connect(signer).setApprovalForAll(tradingContractAddress, true);
+  await tx.wait();
+  console.log(`${time()} ✅ Trading contract approved to manage all NFTs!`);
+}
+
 // Initialize Helia
 async function createHeliaNode() {
   return await createHelia();
@@ -89,7 +107,8 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
   const signer = await provider.getSigner();
   const nftContractAddress = contractAddress;
   const nftABI = [
-    "function batchMint(address _to, string[] memory _uris) public"
+    "function batchMint(address _to, string[] memory _uris) public",
+    "function setApprovalForAll(address _operator, bool _approved) public"
   ];
   const nftContract = new ethers.Contract(nftContractAddress, nftABI, signer);
 
@@ -121,7 +140,14 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
   await batchMintNFTs(signer, nftContract, ownerAddress, ipfsURIs);
   console.log(`${time()} ✅ All Pokémon NFTs minted to: ${ownerAddress}`);
 
-  console.log(`${time()} 🚀 Script finished successfully, all NFTS are ready!`);
+  console.log(`${time()} Deploying Trading Contract...`);
+  const tradingContract = await deployTradingContract(signer, await nftContract.getAddress());
+
+  console.log(`${time()} Approving Trading Contract...`);
+  await approveTradingContract(signer, nftContract, await tradingContract.getAddress());
+
+
+  console.log(`${time()} {\n 🚀 Script finished successfully!\n  - ERC721 Contract launched\n  - Trading Contract launched\n  - All NFT's minted \n  - Trading Contract approved to trade NFT's\n  - Event Listener setup and MongoDB connected\n}`);
 
   return;
 }
