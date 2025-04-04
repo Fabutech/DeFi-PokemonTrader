@@ -4,8 +4,8 @@ import { unixfs } from "@helia/unixfs";
 import { fromString } from "uint8arrays/from-string";
 import { ethers } from "ethers";  
 
+import { setupEventListener } from "./../trackOwnership/eventListener.js";
 import { fetchPokemonData } from "./fetchPokemonData.js";
-
 
 // CONSTANTS
 const ownerAddress = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
@@ -24,6 +24,8 @@ async function deployNFTContract() {
   await nftContract.waitForDeployment(); // Wait for deployment
   
   const contractAddress = await nftContract.getAddress();
+
+  setupEventListener(contractAddress);
   
   return contractAddress;
 }
