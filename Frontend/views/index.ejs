@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poke Trader</title>
+    <link rel="icon" type="image/doge-icon" href="../images/favicon-96x96.ico"> <!--such wow! doge :)-->
+
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/dashboardstyle.css">
+    <link rel="stylesheet" href="../css/dashboard_portfoliostyle.css">
+    
+    <!-- Boxicons CSS -->
+    <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+
+</head>
+<body>
+    <%- include("partials/navbar") -%>
+
+    <section class="home">
+        <div class="text">Fabutech's Portfolio!</div> <!--make it so it detects username?-->
+
+        <div class="balance">
+            <div class="balance-card">
+                <div class="balance-header">Available $USD</div>
+                <div>$1000</div> <!--Available Balance-->
+            </div>
+            <div class="balance-card middle">
+                <div class="balance-header">Net worth</div>
+                <div>$200000</div> <!--Dollar value of all Cryptos + Available Balance-->
+            </div>
+            <div class="balance-card">
+                <div class="balance-header">Crypto Value</div>
+                <div>$344434</div> <!--Dollar value of all owned Cryptos added-->
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <div id="chart"></div>
+        </div>
+
+        <div class="header2">Investments</div>
+
+
+        <div class="description-card"> <!--description header for the different cryptos-->
+            <div class="desc number">#</div>
+            <div class="desc">Name</div>
+            <div class="desc">current Price in $</div>
+            <div class="desc">Amount Owned</div>
+            <div class="desc">Value in $USD</div>
+        </div>
+
+        <!--du muesch eifach für jede crypto en long card inetätsche fabutech-->
+            <div class="long-card">
+                <div class="testing number">1</div>
+                <div class="testing">
+                    <div class="crypto-container">
+                        <div class="crypto-icon"></div>
+                        <div class="crypto-name">Fabucoin</div>
+                        <div class="crypto-abbreviation">FUC</div>
+                    </div>
+                </div>
+                <div class="testing">1000$</div>
+                <div class="testing">13</div>
+                <div class="testing">12</div>
+            </div>
+        
+        <div class="spacer"></div> <!--so cards have a bit of space on bottom-->
+    </section>
+
+    <!--JavaScript-->
+    <script src="../js/navbar.js"></script>
+    <script src="../js/web3-utils.js"></script>
+
+
+    <!--ApexCharts import-->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="../js/chart.js"></script>
+</body>
+</html>

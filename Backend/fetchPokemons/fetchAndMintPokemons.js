@@ -6,20 +6,20 @@ import { ethers } from "ethers";
 
 import { setupEventListener } from "./../trackOwnership/eventListener.js";
 import { fetchPokemonData } from "./fetchPokemonData.js";
+import { runApp} from "../../Frontend/app.js";
 
 // CONSTANTS
 const ownerAddress = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 
+// ABIs
+const ERC721_JSON = JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/ERC721.sol/ERC721.json", "utf8"));
+const TRADING_JSON = JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/TradingContract.sol/TradingContract.json", "utf8"));
 
-async function deployNFTContract() {
-  const provider = new ethers.JsonRpcProvider("http://localhost:8545"); // Hardhat local node
-  const signer = await provider.getSigner(); // Get first signer (default deployer)
-  
-  // Load contract ABI and bytecode (from compilation output)
-  const contractJSON = JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/ERC721.sol/ERC721.json", "utf8"));
-  
+
+
+async function deployNFTContract(signer) {    
   // Deploy the contract
-  const NFTContract = new ethers.ContractFactory(contractJSON.abi, contractJSON.bytecode, signer);
+  const NFTContract = new ethers.ContractFactory(ERC721_JSON.abi, ERC721_JSON.bytecode, signer);
   const nftContract = await NFTContract.deploy("PokeNFT", "PKN");
   await nftContract.waitForDeployment(); // Wait for deployment
   
@@ -29,12 +29,11 @@ async function deployNFTContract() {
   setupEventListener(contractAddress);
   console.log(`${time()} ✅ Successfully setup event listener`);
   
-  return contractAddress;
+  return nftContract;
 }
 
 async function deployTradingContract(signer, nftContractAddress) {
-  const contractJSON = JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/TradingContract.sol/TradingContract.json", "utf8"));
-  const TradingContract = new ethers.ContractFactory(contractJSON.abi, contractJSON.bytecode, signer);
+  const TradingContract = new ethers.ContractFactory(TRADING_JSON.abi, TRADING_JSON.bytecode, signer);
   const tradingContract = await TradingContract.deploy(nftContractAddress);
   await tradingContract.waitForDeployment();
   
@@ -88,11 +87,15 @@ function time() {
   
   // Main function
 async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
+  // Ethereum and contract setup (Hardhat local node)
+  const provider = new ethers.JsonRpcProvider("http://localhost:8545");
+  const signer = await provider.getSigner();
+
   // Deploy new ERC721 contract on the local hardhat testnet
   console.log(`${time()} Script successfully started.`);
   console.log(`${time()} Starting to deploy ERC721 contract...`);
-  const contractAddress = await deployNFTContract();
-  console.log(`${time()} 🚀 Contract deployed at: ${contractAddress} Owner: ${ownerAddress}`);
+  const nftContract = await deployNFTContract(signer);
+  console.log(`${time()} 🚀 Contract deployed at: ${await nftContract.getAddress()} Owner: ${ownerAddress}`);
 
   // Fetch Pokemon metadata from pokeapi
   console.log(`${time()} Starting to fetch Pokemon metadata from pokeapi...`);
@@ -102,16 +105,6 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
   // Create Helia Node for the IPFS metadata storage
   const helia = await createHeliaNode();
 
-  // Ethereum and contract setup (Hardhat local node)
-  const provider = new ethers.JsonRpcProvider("http://localhost:8545");
-  const signer = await provider.getSigner();
-  const nftContractAddress = contractAddress;
-  const nftABI = [
-    "function batchMint(address _to, string[] memory _uris) public",
-    "function setApprovalForAll(address _operator, bool _approved) public"
-  ];
-  const nftContract = new ethers.Contract(nftContractAddress, nftABI, signer);
-
   // Array which saves all ipfsURIs in order to backMint all NFTs at once
   var ipfsURIs = [];
 
@@ -120,7 +113,9 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
     // Prepare metadata
     const metadata = {
       name: pokemon.name,
-      description: `A ${pokemon.pokemon_v2_pokemontypes.map((t) => t.pokemon_v2_type.name).join(", ")} type Pokémon.`,
+      height: pokemon.height,
+      weight: pokemon.weight,
+      description: `${pokemon.pokemon_v2_pokemontypes.map((t) => t.pokemon_v2_type.name).join(", ")}`,
       image: pokemon.pokemon_v2_pokemonsprites?.[0]?.sprites || "",
       attributes: pokemon.pokemon_v2_pokemonstats.map((stat) => ({
         trait_type: stat.pokemon_v2_stat.name,
@@ -142,14 +137,17 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
 
   console.log(`${time()} Deploying Trading Contract...`);
   const tradingContract = await deployTradingContract(signer, await nftContract.getAddress());
+  console.log(`${time()} ✅ Trading contract is deployed to: ${await tradingContract.getAddress()}`);
 
   console.log(`${time()} Approving Trading Contract...`);
   await approveTradingContract(signer, nftContract, await tradingContract.getAddress());
+  console.log(`${time()} ✅ Trading contract is approved to trade all NFT's of ${ownerAddress}`);
 
+  console.log(`${time()} Deploying Frontend website...`);
+  runApp(tradingContract, nftContract, signer, helia);
+  console.log(`${time()} ✅ Successfully deployed website at: localhost:3000`);
 
-  console.log(`${time()} {\n 🚀 Script finished successfully!\n  - ERC721 Contract launched\n  - Trading Contract launched\n  - All NFT's minted \n  - Trading Contract approved to trade NFT's\n  - Event Listener setup and MongoDB connected\n}`);
-
-  return;
+  console.log(`${time()} {\n 🚀 Script finished successfully!\n    - ERC721 Contract launched\n    - Trading Contract launched\n    - All NFT's minted \n    - Trading Contract approved to trade NFT's\n    - Event Listener setup and MongoDB connected\n}`);
 }
   
 fetchAndMintPokemons(ownerAddress, 100).catch(console.error);

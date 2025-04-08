@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poke Trader</title>
+    <link rel="icon" type="image/doge-icon" href="../images/favicon-96x96.ico"> <!--such wow! doge :)-->
+
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/dashboardstyle.css">
+    <link rel="stylesheet" href="../css/dashboard_portfoliostyle.css">
+    <link rel="stylesheet" href="../css/horizontalNFTPresenter.css"
+    
+    <!-- Boxicons CSS -->
+    <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+    <%- include("partials/navbar") -%>
+
+    <section class="home">
+        <div class="main-content-wrapper">
+            <div class="text">My NFT's</div> <!--make it so it detects username?-->
+
+    <!-- ---------------- -->
+    <!-- Overview Section -->
+            <div class="balance">
+                <div class="balance-card">
+                    <div class="balance-header">Currently for Sale</div>
+                    <div>0</div> <!--Available Balance-->
+                </div>
+                <div class="balance-card middle">
+                    <div class="balance-header">Owned NFTs</div>
+                    <div><%= nfts.length %></div> <!--Dollar value of all Cryptos + Available Balance-->
+                </div>
+                <div class="balance-card">
+                    <div class="balance-header">Total Value</div>
+                    <div><%= nfts.length %>$</div> <!--Dollar value of all owned Cryptos added-->
+                </div>
+            </div>
+
+            <div class="spacer"></div>
+
+
+    <!-- ------------ -->
+    <!-- NFTs Section -->
+            <div class="nft-scroll-container">
+                <% nfts.forEach(nft => { %>
+                    <div class="nft-card">
+                        <img src="<%= nft.image.front_default %>" alt="NFT Image">
+                        <h2><%= nft.name.charAt(0).toUpperCase() + nft.name.slice(1) %></h2>
+                        <div><strong>Type: </strong><%= nft.description %></div>
+                        <div class="nft-attributes">
+                            <div class="nft-attribute"><strong>Height:</strong> <%= nft.height %></div>
+                            <div class="nft-attribute"><strong>Weight:</strong> <%= nft.weight %></div>
+                            <% nft.attributes.forEach(attribute => { %>
+                                <div class="nft-attribute"><strong><%= attribute.trait_type %>:</strong> <%= attribute.value %></div>
+                            <% }) %>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+            
+
+    <!-- -------------------- -->
+    <!-- Transactions Section -->
+            <div class="header2">Transaction History</div>
+
+            <div class="description-card"> 
+                <div class="desc number">#</div>
+                <div class="desc">Name</div>
+                <div class="desc">current Price in ETH</div>
+                <div class="desc">Value in $USD</div>
+            </div>
+
+            <div class="long-card">
+                <div class="testing number">1</div>
+                <div class="testing">
+                    <div class="crypto-container">
+                        <div class="crypto-icon"></div>
+                        <div class="crypto-name">Bulbasaur</div>
+                        <div class="crypto-abbreviation">Bulb</div>
+                    </div>
+                </div>
+                <div class="testing">1.5 ETH</div>
+                <div class="testing">1500$</div>
+            </div>
+            
+            <div class="spacer"></div>
+        </div>
+    </section>
+
+    <!--JavaScript-->
+    <script src="../js/navbar.js"></script>
+    <script src="../js/web3-utils.js"></script>
+
+
+    <!--ApexCharts import-->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="../js/chart.js"></script>
+</body>
+</html>

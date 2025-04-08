@@ -38,12 +38,12 @@ export function setupEventListener(contractAddress) {
 
             if (existingRecord) {
                 // If the token is already in the DB, update the owner address
-                existingRecord.ownerAddress = to;
+                existingRecord.ownerAddress = to.toLowerCase();
                 existingRecord.lastUpdated = Date.now();
                 await existingRecord.save();
             } else {
                 // If the token is new, create a new record
-                const newOwnership = new NFTOwnership({ tokenId, ownerAddress: to });
+                const newOwnership = new NFTOwnership({ tokenId, ownerAddress: to.toLowerCase() });
                 await newOwnership.save();
             }
         } catch (error) {
@@ -64,7 +64,7 @@ async function connectMongoDB() {
     } catch (error) {
       console.error('MongoDB connection error:', error);
     }
-  }
+}
 
   // Helper function to get current time
 function time() {
