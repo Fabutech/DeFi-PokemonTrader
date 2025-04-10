@@ -1,0 +1,78 @@
+.enhanced-card {
+    background: var(--card-bg-light, rgba(255, 255, 255, 0.85));
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    color: #1a1a1a;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    padding: 1rem;
+    margin: 1rem;
+    width: 280px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+body.dark .enhanced-card {
+    background: linear-gradient(145deg, #1f1f1f, #2c2c2c);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+body:not(.dark) .enhanced-card {
+    background: var(--card-bg-light, rgba(255, 255, 255, 0.85));
+    color: #1a1a1a;
+}
+
+.enhanced-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px 10px rgba(0, 255, 255, 0.2);
+}
+
+.nft-img-wrapper {
+    text-align: center;
+    padding: 0;
+}
+
+.nft-img-wrapper img {
+    width: 200px;
+    height: auto;
+    transition: transform 0.4s ease;
+}
+
+.enhanced-card:hover .nft-img-wrapper img {
+    transform: scale(1.1) rotate(2deg);
+}
+
+.nft-details {
+    text-align: left;
+    padding: 0.5rem 0;
+}
+
+.nft-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+}
+
+.nft-description {
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+.nft-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.3rem 0;
+}
+
+.nft-row div {
+    width: 48%;
+    font-size: 0.95rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+
+body.dark .nft-row div {
+    background-color: rgba(255, 255, 255, 0.05);
+}

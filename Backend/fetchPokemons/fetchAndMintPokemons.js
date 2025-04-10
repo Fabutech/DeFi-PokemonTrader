@@ -110,6 +110,11 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
 
   console.log(`${time()} Starting to upload NFT metadata to IPFS...`);
   for (const pokemon of pokemons) {
+    let attributes = {};
+    pokemon.pokemon_v2_pokemonstats.forEach((stat) => {
+      attributes[stat.pokemon_v2_stat.name] = stat.base_stat
+    })
+
     // Prepare metadata
     const metadata = {
       name: pokemon.name,
@@ -117,10 +122,7 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
       weight: pokemon.weight,
       description: `${pokemon.pokemon_v2_pokemontypes.map((t) => t.pokemon_v2_type.name).join(", ")}`,
       image: pokemon.pokemon_v2_pokemonsprites?.[0]?.sprites || "",
-      attributes: pokemon.pokemon_v2_pokemonstats.map((stat) => ({
-        trait_type: stat.pokemon_v2_stat.name,
-        value: stat.base_stat,
-      })),
+      attributes: attributes
     };
 
     // Upload to IPFS

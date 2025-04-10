@@ -11,8 +11,9 @@
     <!-- CSS -->
     <link rel="stylesheet" href="../css/dashboardstyle.css">
     <link rel="stylesheet" href="../css/dashboard_portfoliostyle.css">
-    <link rel="stylesheet" href="../css/horizontalNFTPresenter.css"
-    
+    <link rel="stylesheet" href="../css/horizontalNFTPresenter.css">
+    <link rel="stylesheet" href="../css/nftCardEffects.css">
+
     <!-- Boxicons CSS -->
     <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
 </head>
@@ -45,22 +46,33 @@
 
     <!-- ------------ -->
     <!-- NFTs Section -->
-            <div class="nft-scroll-container">
-                <% nfts.forEach(nft => { %>
-                    <div class="nft-card">
-                        <img src="<%= nft.image.front_default %>" alt="NFT Image">
-                        <h2><%= nft.name.charAt(0).toUpperCase() + nft.name.slice(1) %></h2>
-                        <div><strong>Type: </strong><%= nft.description %></div>
-                        <div class="nft-attributes">
-                            <div class="nft-attribute"><strong>Height:</strong> <%= nft.height %></div>
-                            <div class="nft-attribute"><strong>Weight:</strong> <%= nft.weight %></div>
-                            <% nft.attributes.forEach(attribute => { %>
-                                <div class="nft-attribute"><strong><%= attribute.trait_type %>:</strong> <%= attribute.value %></div>
-                            <% }) %>
+            <div class="nft-carousel-wrapper">
+                <div class="nft-scroll-container">
+                    <% nfts.forEach(nft => { %>
+                        <div class="nft-card enhanced-card">
+                            <div class="nft-img-wrapper">
+                                <img src="<%= nft.image.front_default %>" alt="NFT Image">
+                            </div>
+                            <div class="nft-details">
+                                <h2 class="nft-name"><%= nft.name.charAt(0).toUpperCase() + nft.name.slice(1) %></h2>
+                                <div class="nft-description"><strong>Type:</strong> <%= nft.description %></div>
+                                <div class="nft-row">
+                                    <div><strong>Height:</strong> <%= nft.height %></div>
+                                    <div><strong>Weight:</strong> <%= nft.weight %></div>
+                                </div>
+                                <div class="nft-row">
+                                    <div><strong>hp:</strong> <%= nft.attributes["hp"] %></div>
+                                    <div><strong>speed:</strong> <%= nft.attributes["speed"] %></div>
+                                </div>
+                                <div class="nft-row">
+                                    <div><strong>defense:</strong> <%= nft.attributes["defense"] %></div>
+                                    <div><strong>attack:</strong> <%= nft.attributes["attack"] %></div>
+                                </div>
+                            </div>
                         </div>
+                    <% }) %>
                     </div>
-                <% }) %>
-            </div>
+                </div>
             
 
     <!-- -------------------- -->
@@ -94,10 +106,6 @@
     <!--JavaScript-->
     <script src="../js/navbar.js"></script>
     <script src="../js/web3-utils.js"></script>
-
-
-    <!--ApexCharts import-->
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script src="../js/chart.js"></script>
+    <script src="../js/nftCardEffects.js"></script>
 </body>
 </html>

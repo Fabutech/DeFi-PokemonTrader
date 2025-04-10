@@ -1,45 +1,41 @@
 .nft-scroll-container {
     display: flex;
+    flex-wrap: nowrap;
     overflow-x: auto;
-    gap: 1rem;
-    padding: 1rem 60px;
-}
-
-.nft-scroll-container::-webkit-scrollbar {
-    height: 8px;
-}
-
-.nft-scroll-container::-webkit-scrollbar-thumb {
-    background-color: #888;
-    border-radius: 4px;
-}
-
-.nft-card {
+    gap: 1.5rem;
+    padding: 2rem;
+    margin: auto !important;
+    scroll-snap-type: x mandatory;
+  }
+  
+  .nft-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .enhanced-card {
+    scroll-snap-align: start;
     flex: 0 0 auto;
-    width: 250px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 1rem;
-    background-color: #fff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
+  }
 
-.nft-card img {
+.nft-carousel-wrapper {
+    overflow: hidden;
+    position: relative;
     width: 100%;
-    height: auto;
-    border-radius: 4px;
-}
+  }
+  
+  .nft-scroll-container {
+    display: flex;
+    gap: 1.5rem;
+    width: max-content;
+    will-change: transform;
+  }
+  
+  @keyframes scroll-carousel {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
 
-.nft-card h3 {
-    margin-top: 0.5rem;
-    font-size: 1.2rem;
-}
-
-.nft-attributes {
-    margin-top: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.nft-attribute {
-    margin: 0.2rem 0;
-}
