@@ -13,6 +13,26 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    const checkMetaMaskLockStatus = async () => {
+        if (window.ethereum) {
+            const accounts = await ethereum.request({ method: 'eth_accounts' });
+            const account = accounts[0] || null;
+    
+            if (account !== currentAccount) {
+                currentAccount = account;
+                updateUI(currentAccount);
+    
+                fetch('/api/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: currentAccount?.toLowerCase() || null })
+                });
+    
+                window.location.reload(); // Optional: only if needed
+            }
+        }
+    };
+
     let currentAccount = null;
 
     if (window.ethereum) {
@@ -20,30 +40,38 @@ window.addEventListener('DOMContentLoaded', async () => {
         currentAccount = accounts[0] || null;
         updateUI(currentAccount);
 
-        console.log(accounts);
-
         fetch('/api/connect', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address: currentAccount.toLowerCase() })
+            body: JSON.stringify({ address: currentAccount?.toLowerCase() || null })
         });
 
         connectBtn.onclick = async () => {
             try {
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        
+                if (accounts.length === 0) {
+                    alert("Please log in to MetaMask and try again.");
+                    return;
+                }
+        
                 currentAccount = accounts[0];
                 updateUI(currentAccount);
-
+        
                 fetch('/api/connect', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ address: currentAccount.toLowerCase() })
+                    body: JSON.stringify({ address: currentAccount?.toLowerCase() || null })
                 });
-
+        
                 window.location.reload();
             } catch (err) {
                 console.error(err);
-                alert("Wallet connection failed.");
+                if (err.code === 4001) {
+                    alert("Connection request was rejected.");
+                } else {
+                    alert("MetaMask is locked. Please unlock it and try again.");
+                }
             }
         };
 
@@ -54,11 +82,13 @@ window.addEventListener('DOMContentLoaded', async () => {
             fetch('/api/connect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ address: currentAccount.toLowerCase() })
+                body: JSON.stringify({ address: currentAccount?.toLowerCase() || null })
             });
 
             window.location.reload();
         });
+
+        setInterval(checkMetaMaskLockStatus, 3000);
     } else {
         connectText.innerText = "MetaMask Not Found";
         connectBtn.disabled = true;
