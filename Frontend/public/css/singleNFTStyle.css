@@ -45,27 +45,75 @@
     margin-right: 4px;
   }
   
-  .nft-sale-timer {
-    font-size: 1em;
+  .popup-field {
     margin-top: 10px;
+    text-align: left;
   }
-  
-  .timer {
+  .popup-field input {
+    width: 100%;
+    padding: 5px;
+    margin-top: 4px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  .nft-sale-price-box {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .divider-line {
+    height: 1px;
+    background-color: #ccc;
+    margin: 20px 0;
+  }
+  .nft-sale-section, .nft-price-section {
+    display: flex;
+    flex-direction: column;
+  }
+  .nft-sale-header {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+  .nft-sale-timer-grid {
+    display: flex;
+    gap: 24px;
+    text-align: left;
+  }
+  .time-part {
+    font-size: 20px;
+  }
+  .time-label {
+    font-size: 12px;
+    color: #666;
+  }
+  .nft-price-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+  }
+  .nft-price-value {
+    font-size: 28px;
     font-weight: bold;
-    font-size: 1.2em;
-    margin-top: 5px;
-    color: #3b82f6;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
   }
-  
-  .nft-price h2 {
-    font-size: 2em;
-    margin: 0;
-    color: #222;
+  .usd-price {
+    font-size: 16px;
+    font-weight: lighter;
+    color: #888;
   }
-  
-  .nft-price p {
-    color: #555;
-    margin: 0;
+  .nft-sale-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .nft-sale-actions .half-width {
+    flex: 1;
   }
   
   .nft-action-buttons {

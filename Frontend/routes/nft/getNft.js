@@ -16,10 +16,14 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         listing = null;
         nftPriceUSD = null;
     } else {
-        const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
-        const data = await response.json();
-        const ethUsd = data.ethereum.usd;
-        nftPriceUSD = Number(listing.price) * ethUsd;
+        try {
+            const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+            const data = await response.json();
+            const ethUsd = data.ethereum.usd;
+            nftPriceUSD = Number(listing.price) * ethUsd;
+        } catch (e) {
+            console.log("Error while fetching eth to usd exchange rate: " + e);
+        }
     }
 
     // Fetch NFT metadata from the IPFS storage

@@ -37,19 +37,34 @@
                                     <img src="<%= nft.metadata.image %>" alt="NFT Image">
                                     <div class="nft-details">
                                         <h2 class="nft-name"><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %></h2>
-                                        <div class="nft-description"><strong>Type:</strong> <%= nft.metadata.description %></div>
                                         <div class="nft-row">
-                                            <div><strong>Height:</strong> <%= nft.metadata.height %></div>
-                                            <div><strong>Weight:</strong> <%= nft.metadata.weight %></div>
+                                            <div class="nft-row-full"><strong>Price:</strong> <%= nft.listing ? (nft.listing.price + " ETH") : "Not listed" %></div>
                                         </div>
                                         <div class="nft-row">
-                                            <div><strong>hp:</strong> <%= nft.metadata.attributes["hp"] %></div>
-                                            <div><strong>speed:</strong> <%= nft.metadata.attributes["speed"] %></div>
+                                            <% if (nft.priceUSD) { %>
+                                                <div class="nft-row-full"><strong>USD:</strong> <span>~$<%= nft.priceUSD.toFixed(2) %></span></div>
+                                            <% } %>
                                         </div>
-                                        <div class="nft-row">
-                                            <div><strong>defense:</strong> <%= nft.metadata.attributes["defense"] %></div>
-                                            <div><strong>attack:</strong> <%= nft.metadata.attributes["attack"] %></div>
-                                        </div>
+                                        <% if (nft.listing && nft.listing.expiration) { %>
+                                            <div class="nft-row countdown" data-expiration="<%= nft.listing.expiration %>">
+                                                <div class="nft-row-full"><strong>Expires in:</strong> <span class="time-remaining">Loading...</span></div>
+                                            </div>
+                                            <div class="nft-row nft-row-full expiration-date">
+                                                <div class="nft-row-full">
+                                                    <strong>End Date:</strong> <span class="end-date-text">
+                                                        <%= new Date(Number(nft.listing.expiration) * 1000).toLocaleString(undefined, {
+                                                            year: 'numeric',
+                                                            month: '2-digit',
+                                                            day: '2-digit',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        }).replace(/(\d{2})[\/.-](\d{2})[\/.-](\d{4}),? ?(\d{2}:\d{2}) ?(AM|PM)?/, (match, d, m, y, t, ap) => {
+                                                            return `${d}.${m}.${y}, ${t}`;
+                                                        }) %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        <% } %>
                                     </div>
                                 </div>
                             </div>
@@ -62,5 +77,31 @@
     <script src="../js/navbar.js"></script>
     <script src="../js/web3-utils.js"></script>
     <script src="../js/nftCardEffects.js"></script>
+    <script>
+        // Countdown logic goes here
+        document.querySelectorAll('.countdown').forEach(countdown => {
+            const expiration = parseInt(countdown.getAttribute('data-expiration')) * 1000;
+            const timeRemaining = countdown.querySelector('.time-remaining');
+
+            const updateCountdown = () => {
+                const now = Date.now();
+                const remainingTime = expiration - now;
+
+                if (remainingTime <= 0) {
+                    timeRemaining.textContent = "Expired";
+                    clearInterval(interval);
+                } else {
+                    const seconds = Math.floor((remainingTime / 1000) % 60);
+                    const minutes = Math.floor((remainingTime / 1000 / 60) % 60);
+                    const hours = Math.floor((remainingTime / 1000 / 60 / 60) % 24);
+                    const days = Math.floor(remainingTime / 1000 / 60 / 60 / 24);
+                    timeRemaining.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                }
+            };
+
+            updateCountdown();
+            const interval = setInterval(updateCountdown, 1000);
+        });
+    </script>
 </body>
 </html>

@@ -14,20 +14,6 @@
   <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
 
   <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
-  
-  <style>
-    .popup-field {
-      margin-top: 10px;
-      text-align: left;
-    }
-    .popup-field input {
-      width: 100%;
-      padding: 5px;
-      margin-top: 4px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-  </style>
 </head>
 <body>
   <%- include("partials/navbar") -%>
@@ -66,33 +52,41 @@
       </div>
 
       <% if (nft.isForSale) { %>
-        <div class="nft-sale-timer">
-          Sale ends <span id="saleEndDate"><%= nft.listing.expiration %></span>
-          <div class="timer" id="countdown"></div>
-        </div>
-
-        <div class="nft-price">
-          <h2><%= nft.listing.price %> ETH</h2>
-          <p>≈ $<%= nft.priceUSD %></p>
-        </div>
-
-        <% if (!isOwner) { %>
-            <div class="nft-action-buttons">
-            <button id="buy-btn" class="blue-btn" data-price="<%= nft.listing.price %>">Buy now</button>
-            <button id="offer-btn" class="white-btn">Make offer</button>
+        <div class="nft-sale-price-box">
+          <div class="nft-sale-section">
+            <div class="nft-sale-header">Sale ends <span id="saleEndDate"><%= nft.listing.expiration %></span></div>
+            <div class="nft-sale-timer-grid">
+              <div><span id="hours" class="time-part">00</span><div class="time-label">Hours</div></div>
+              <div><span id="minutes" class="time-part">00</span><div class="time-label">Minutes</div></div>
+              <div><span id="seconds" class="time-part">00</span><div class="time-label">Seconds</div></div>
             </div>
-        <% } %>
-      <% } %>
-
-    <% if (isOwner) { %>
-        <div class="nft-action-buttons">
-            <% if (!nft.isForSale) { %>
-                <button id="listNFTbtn" class="blue-btn">List NFT</button>
-            <% } else { %>
-                <button id="delistNFTbtn" class="blue-btn">Delist NFT</button>
-            <% } %>
+          </div>
+          <div class="divider-line"></div>
+          <div class="nft-price-section">
+            <div class="nft-price-label">Current price</div>
+            <div class="nft-price-value">
+              <span><%= nft.listing.price %> ETH</span>
+              <% if (nft.priceUSD) { %>
+                <span class="usd-price">$<%= nft.priceUSD.toFixed(2) %></span>
+              <% } %>
+            </div>
+          </div>
+          <% if (!isOwner) { %>
+            <div class="nft-sale-actions">
+              <button id="buy-btn" class="blue-btn half-width" data-price="<%= nft.listing.price %>">Buy now</button>
+              <button id="offer-btn" class="white-btn half-width">Make offer</button>
+            </div>
+          <% } else { %>
+            <div class="nft-sale-actions">
+              <% if (!nft.isForSale) { %>
+                  <button id="listNFTbtn" class="blue-btn">List NFT</button>
+              <% } else { %>
+                  <button id="delistNFTbtn" class="blue-btn">Delist NFT</button>
+              <% } %>
+          </div>
+          <% } %>
         </div>
-    <% } %>
+      <% } %>
     </div>
   </section>
 

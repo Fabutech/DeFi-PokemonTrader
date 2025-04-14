@@ -109,6 +109,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
                 const cleanup = () => {
                     popup.style.display = "none";
+                    listBtn.click();
                 };
 
                 const statusDiv = document.getElementById("approval-status");

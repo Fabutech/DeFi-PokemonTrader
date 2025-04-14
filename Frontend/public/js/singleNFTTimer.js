@@ -1,8 +1,11 @@
 const saleEndElem = document.getElementById("saleEndDate");
-const countdownElem = document.getElementById("countdown");
+const hoursElem = document.getElementById("hours");
+const minutesElem = document.getElementById("minutes");
+const secondsElem = document.getElementById("seconds");
 
-if (saleEndElem && countdownElem) {
+if (saleEndElem && hoursElem && minutesElem && secondsElem) {
   const saleEnd = new Date(parseInt(saleEndElem.textContent.trim()) * 1000);
+
   saleEndElem.textContent = saleEnd.toLocaleString(undefined, {
     year: 'numeric',
     month: '2-digit',
@@ -16,9 +19,11 @@ if (saleEndElem && countdownElem) {
   function updateCountdown() {
     const now = new Date();
     const diff = saleEnd - now;
-
+    
     if (diff <= 0) {
-      countdownElem.textContent = "Sale ended";
+      hoursElem.textContent = "00";
+      minutesElem.textContent = "00";
+      secondsElem.textContent = "00";
       return;
     }
 
@@ -26,7 +31,9 @@ if (saleEndElem && countdownElem) {
     const minutes = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, '0');
     const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
 
-    countdownElem.textContent = `${hours}h ${minutes}m ${seconds}s`;
+    hoursElem.textContent = hours;
+    minutesElem.textContent = minutes;
+    secondsElem.textContent = seconds;
   }
 
   setInterval(updateCountdown, 1000);

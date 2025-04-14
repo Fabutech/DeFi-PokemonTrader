@@ -12,7 +12,7 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
             try {
                 let listing = await tradingContract.connect(signer).listings(nft.tokenId);
                 if (!listing.isActive) {
-                return null;
+                    return null;
                 }
         
                 const tokenUri = await nftContract.connect(signer).tokenURI(nft.tokenId);
@@ -24,11 +24,17 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
                 }
         
                 const metadata = JSON.parse(content);
+
+                const ethUsdRaw = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+                const ethUsdJson = await ethUsdRaw.json();
+                const ethUsd = ethUsdJson.ethereum.usd;
+                const nftPriceUSD = Number(listing.price) * ethUsd;
         
                 return {
-                tokenId: nft.tokenId,
-                listing,
-                metadata
+                    tokenId: nft.tokenId,
+                    listing: listing,
+                    priceUSD: nftPriceUSD,
+                    metadata: metadata
                 };
             } catch (err) {
                 console.error(`Error fetching metadata for token ${nft.tokenId}:`, err);
