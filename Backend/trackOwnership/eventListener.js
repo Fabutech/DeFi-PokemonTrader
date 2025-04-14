@@ -14,11 +14,11 @@ const NFTOwnership = mongoose.model('NFTOwnership', nftOwnershipSchema);
 
 let mongooseConnected = false;
 
-export function setupEventListener(contractAddress) {
-    connectMongoDB()
+export async function setupEventListener(contractAddress) {
+    await connectMongoDB()
     
     // Wipe the NFTOwnership collection
-    NFTOwnership.deleteMany({})
+    await NFTOwnership.deleteMany({})
         .then(() => {
             console.log(`${time()} Cleared NFTOwnership database`);
         })

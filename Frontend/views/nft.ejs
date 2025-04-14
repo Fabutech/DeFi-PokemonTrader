@@ -14,41 +14,20 @@
   <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
 
   <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
-
+  
   <style>
-    .approval-popup {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-    .popup-content {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      width: 300px;
-      text-align: center;
-    }
-    .popup-buttons {
-      margin-top: 15px;
-      display: flex;
-      justify-content: space-between;
-    }
-    .popup-buttons .blue-btn,
-    .popup-buttons .white-btn {
-      flex: 1;
-      margin: 0 5px;
-    }
-    #approval-status {
+    .popup-field {
       margin-top: 10px;
-      font-weight: bold;
+      text-align: left;
+    }
+    .popup-field input {
+      width: 100%;
+      padding: 5px;
+      margin-top: 4px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
   </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
 </head>
 <body>
   <%- include("partials/navbar") -%>
@@ -57,7 +36,7 @@
     <div class="nft-detail-left">
         <div class="nft-card enhanced-card">
             <div class="nft-img-wrapper">
-                <img src="<%= nft.metadata.image.front_default %>" alt="NFT Image">
+                <img src="<%= nft.metadata.image %>" alt="NFT Image">
                 <div class="nft-details">
                     <div class="nft-description"><strong>Type:</strong> <%= nft.metadata.description %></div>
                     <div class="nft-row">
@@ -88,7 +67,7 @@
 
       <% if (nft.isForSale) { %>
         <div class="nft-sale-timer">
-          Sale ends <span id="saleEndDate"><%= nft.saleEnd %></span>
+          Sale ends <span id="saleEndDate"><%= nft.listing.expiration %></span>
           <div class="timer" id="countdown"></div>
         </div>
 
@@ -116,6 +95,51 @@
     <% } %>
     </div>
   </section>
+
+  <!-- Approval Popup -->
+  <div id="approval-popup" class="approval-popup" style="display: none;">
+    <div class="popup-content" style="position: relative;">
+      <span id="close-approval-popup" style="position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px;">&times;</span>
+      <h2>Approval Needed</h2>
+      <p>To list your Pokémon NFT, you must first approve the trading contract to manage your NFT.</p>
+      <p>You can choose to approve just this NFT or all your NFTs.</p>
+      <div class="popup-buttons">
+        <button id="approve-single" class="blue-btn">Approve This NFT</button>
+        <button id="approve-all" class="white-btn">Approve All NFTs</button>
+      </div>
+      <div id="approval-status"></div>
+    </div>
+  </div>
+
+  <!-- Listing Popup -->
+  <div id="listing-popup" class="approval-popup" style="display: none;">
+    <div class="popup-content" style="position: relative;">
+      <span id="close-listing-popup" style="position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px;">&times;</span>
+      <h2>List Your Pokémon NFT</h2>
+      <p>Set your desired price and the duration of the sale.</p>
+      
+      <div class="popup-field">
+        <label for="listing-price"><strong>Price (ETH):</strong></label>
+        <input type="number" id="listing-price" placeholder="e.g. 0.5" min="0" step="0.01" />
+      </div>
+
+      <div class="popup-field">
+        <label for="listing-date"><strong>Expiration Date:</strong></label>
+        <input type="date" id="listing-date" />
+      </div>
+
+      <div class="popup-field">
+        <label for="listing-time"><strong>Expiration Time:</strong></label>
+        <input type="time" id="listing-time" />
+      </div>
+
+      <div class="popup-buttons" style="margin-top: 15px;">
+        <button id="confirm-listing" class="blue-btn">List NFT</button>
+      </div>
+
+      <div id="listing-status" style="margin-top: 10px; font-weight: bold;"></div>
+    </div>
+  </div>
 
   <!-- Scripts -->
   <script>

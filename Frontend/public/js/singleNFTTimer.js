@@ -2,7 +2,16 @@ const saleEndElem = document.getElementById("saleEndDate");
 const countdownElem = document.getElementById("countdown");
 
 if (saleEndElem && countdownElem) {
-  const saleEnd = new Date(saleEndElem.textContent.trim());
+  const saleEnd = new Date(parseInt(saleEndElem.textContent.trim()) * 1000);
+  saleEndElem.textContent = saleEnd.toLocaleString(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).replace(/(\d{2})[\/.-](\d{2})[\/.-](\d{4}),? ?(\d{2}:\d{2}) ?(AM|PM)?/, (match, d, m, y, t, ap) => {
+    return `${d}.${m}.${y}, ${t}${ap ? ' ' + ap : ''}`;
+  });
 
   function updateCountdown() {
     const now = new Date();

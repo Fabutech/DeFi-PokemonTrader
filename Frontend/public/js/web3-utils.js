@@ -104,49 +104,40 @@ window.addEventListener('DOMContentLoaded', async () => {
 
         if (listBtn) {
             const showApprovalPopup = () => {
-                const popup = document.createElement('div');
-                popup.className = 'approval-popup';
-                popup.innerHTML = `
-                  <div class="popup-content">
-                    <h2>Approval Needed</h2>
-                    <p>To list your Pokémon NFT, you must first approve the trading contract to manage your NFT.</p>
-                    <p>You can choose to approve just this NFT or all your NFTs.</p>
-                    <div class="popup-buttons">
-                      <button id="approve-single" class="blue-btn">Approve This NFT</button>
-                      <button id="approve-all" class="white-btn">Approve All NFTs</button>
-                    </div>
-                    <div id="approval-status"></div>
-                  </div>
-                `;
-                document.body.appendChild(popup);
-          
-                const cleanup = () => popup.remove();
-          
+                const popup = document.getElementById("approval-popup");
+                popup.style.display = "flex";
+
+                const cleanup = () => {
+                    popup.style.display = "none";
+                };
+
                 const statusDiv = document.getElementById("approval-status");
                 const updateStatus = (msg, success = true) => {
-                  statusDiv.innerText = msg;
-                  statusDiv.style.color = success ? 'green' : 'red';
+                    statusDiv.innerText = msg;
+                    statusDiv.style.color = success ? 'green' : 'red';
                 };
-          
+
                 document.getElementById("approve-single").onclick = async () => {
-                  try {
-                    await nftContract.methods.approve(tradingAddress, tokenId).send({ from: userAddress });
-                    updateStatus("✅ Single NFT approved!");
-                    setTimeout(cleanup, 2000);
-                  } catch (err) {
-                    updateStatus("❌ Approval failed.", false);
-                  }
+                    try {
+                        await nftContract.methods.approve(tradingAddress, tokenId).send({ from: userAddress });
+                        updateStatus("✅ Single NFT approved!");
+                        setTimeout(cleanup, 2000);
+                    } catch (err) {
+                        updateStatus("❌ Approval failed.", false);
+                    }
                 };
-          
+
                 document.getElementById("approve-all").onclick = async () => {
-                  try {
-                    await nftContract.methods.setApprovalForAll(tradingAddress, true).send({ from: userAddress });
-                    updateStatus("✅ All NFTs approved!");
-                    setTimeout(cleanup, 2000);
-                  } catch (err) {
-                    updateStatus("❌ Approval failed.", false);
-                  }
+                    try {
+                        await nftContract.methods.setApprovalForAll(tradingAddress, true).send({ from: userAddress });
+                        updateStatus("✅ All NFTs approved!");
+                        setTimeout(cleanup, 2000);
+                    } catch (err) {
+                        updateStatus("❌ Approval failed.", false);
+                    }
                 };
+
+                document.getElementById("close-approval-popup").onclick = cleanup;
             };
 
             listBtn.addEventListener("click", async () => {
@@ -158,31 +149,46 @@ window.addEventListener('DOMContentLoaded', async () => {
                     return;
                 }
 
-                try {
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-                    const account = accounts[0];
-                    if (!account) {
-                        alert("Please connect your wallet first.");
+                const listingPopup = document.getElementById("listing-popup");
+                listingPopup.style.display = "flex";
+
+                const closeListing = () => listingPopup.style.display = "none";
+                document.getElementById("close-listing-popup").onclick = closeListing;
+
+                document.getElementById("confirm-listing").onclick = async () => {
+                    const priceEth = document.getElementById("listing-price").value;
+                    const date = document.getElementById("listing-date").value;
+                    const time = document.getElementById("listing-time").value;
+
+                    if (!priceEth || !date || !time) {
+                        document.getElementById("listing-status").innerText = "⚠️ Please fill in all fields.";
+                        document.getElementById("listing-status").style.color = "red";
                         return;
                     }
-    
-                    if (typeof window.ethereum === 'undefined') {
-                        alert("MetaMask is not installed. Please install it to use this feature.");
-                        return;
+
+                    const expiration = Math.floor(new Date(`${date}T${time}`).getTime() / 1000);
+
+                    try {
+                        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                        const account = accounts[0];
+
+                        const estimatedGas = await tradingContract.methods.listNFT(tokenId, priceEth, expiration).estimateGas({ from: account });
+                        await tradingContract.methods.listNFT(tokenId, priceEth, expiration).send({
+                            from: account,
+                            gas: estimatedGas + 1000n
+                        });
+
+                        document.getElementById("listing-status").innerText = "✅ NFT listed successfully!";
+                        document.getElementById("listing-status").style.color = "green";
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } catch (err) {
+                        console.error("Failed to list NFT", err);
+                        document.getElementById("listing-status").innerText = "❌ " + err.message;
+                        document.getElementById("listing-status").style.color = "red";
                     }
-        
-                    const estimatedGas = await tradingContract.methods.listNFT(tokenId, 1000).estimateGas({ from: account });
-                    await tradingContract.methods.listNFT(tokenId, 1000).send({
-                        from: account,
-                        gas: estimatedGas + 1000n
-                    });
-    
-                    alert("NFT delisted successfully!");
-                    location.reload();
-                } catch (err) {
-                    console.error("Failed to list NFT", err);
-                    alert("Error: " + err.message);
-                }
+                };
             });
         }
 

@@ -133,6 +133,48 @@
   .nft-img-wrapper img {
     width: 370px;
 }
+
+#saleEndDate {
+  color: grey;
+}
+
+
+/* ---------------- */
+/* Approval PopUp */
+.approval-popup {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.popup-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 450px;
+  text-align: center;
+}
+.popup-buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+.popup-buttons .blue-btn,
+.popup-buttons .white-btn {
+  flex: 1;
+  margin: 0 5px;
+}
+#approval-status {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+
+/* ------------------- */
+/* DARKMODE */
   
   /* Right side details */
   body.dark .nft-detail-right h1,

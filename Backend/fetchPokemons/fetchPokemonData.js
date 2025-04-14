@@ -1,41 +1,28 @@
-// Function to fetch Pokémon data from API
 export async function fetchPokemonData(numbOfPokemons) {
-    const query = `
-      {
-        pokemon_v2_pokemon(limit: ${numbOfPokemons}) {
-          id
-          name
-          height
-          weight
-          pokemon_v2_pokemonsprites {
-            sprites
-          }
-          pokemon_v2_pokemonabilities {
-            pokemon_v2_ability {
-                name
-            }
-          }
-          pokemon_v2_pokemonstats {
-            pokemon_v2_stat {
-                name
-            }
-            base_stat
-          }
-          pokemon_v2_pokemontypes {
-            pokemon_v2_type {
-              name
-            }
-          }
-        }
-      }
-    `;
+  const baseUrl = "https://pokeapi.co/api/v2/pokemon";
+  const pokemons = [];
 
-    const response = await fetch("https://beta.pokeapi.co/graphql/v1beta", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query })
-    });
+  for (let id = 1; id <= numbOfPokemons; id++) {
+    try {
+      const res = await fetch(`${baseUrl}/${id}`);
+      const data = await res.json();
 
-    const data = await response.json();
-    return data.data.pokemon_v2_pokemon;
+      pokemons.push({
+        id: data.id,
+        name: data.name,
+        height: data.height,
+        weight: data.weight,
+        sprites: data.sprites, // includes front_default, other artwork, etc.
+        abilities: data.abilities.map(a => a.ability.name),
+        stats: data.stats.map(s => ({
+          name: s.stat.name,
+          base_stat: s.base_stat
+        })),
+        types: data.types.map(t => t.type.name)
+      });
+    } catch (e) {
+      console.error(`Failed to fetch data for Pokémon ID ${id}:`, e);
+    }
+  }
+  return pokemons;
 }

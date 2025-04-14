@@ -26,7 +26,7 @@ async function deployNFTContract(signer) {
   const contractAddress = await nftContract.getAddress();
 
   console.log(`${time()} Starting to setup contract event listener`);
-  setupEventListener(contractAddress);
+  await setupEventListener(contractAddress);
   console.log(`${time()} ✅ Successfully setup event listener`);
   
   return nftContract;
@@ -111,23 +111,22 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
   console.log(`${time()} Starting to upload NFT metadata to IPFS...`);
   for (const pokemon of pokemons) {
     let attributes = {};
-    pokemon.pokemon_v2_pokemonstats.forEach((stat) => {
-      attributes[stat.pokemon_v2_stat.name] = stat.base_stat
-    })
+    pokemon.stats.forEach((stat) => {
+      attributes[stat.name] = stat.base_stat;
+    });
 
-    // Prepare metadata
+    const image = pokemon.sprites?.other?.["official-artwork"]?.front_default || pokemon.sprites?.front_default || "";
+
     const metadata = {
       name: pokemon.name,
       height: pokemon.height,
       weight: pokemon.weight,
-      description: `${pokemon.pokemon_v2_pokemontypes.map((t) => t.pokemon_v2_type.name).join(", ")}`,
-      image: pokemon.pokemon_v2_pokemonsprites?.[0]?.sprites || "",
+      description: pokemon.types.join(", "),
+      image: image,
       attributes: attributes
     };
 
-    // Upload to IPFS
     const ipfsURI = await uploadToIPFS(helia, metadata);
-
     ipfsURIs.push(ipfsURI);  
   }
   console.log(`${time()} ✅ Uploaded all NFT metadata to IPFS!`);

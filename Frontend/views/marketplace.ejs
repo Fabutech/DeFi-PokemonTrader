@@ -34,7 +34,7 @@
                         <a href="/nft/<%= nft.tokenId %>" class="nft-link" style="text-decoration: none;">
                             <div class="nft-card enhanced-card">
                                 <div class="nft-img-wrapper">
-                                    <img src="<%= nft.metadata.image.front_default %>" alt="NFT Image">
+                                    <img src="<%= nft.metadata.image %>" alt="NFT Image">
                                     <div class="nft-details">
                                         <h2 class="nft-name"><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %></h2>
                                         <div class="nft-description"><strong>Type:</strong> <%= nft.metadata.description %></div>

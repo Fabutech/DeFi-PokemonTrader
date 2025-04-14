@@ -10,9 +10,16 @@ export default async function getNft(req, res, tradingContract, tradingContractA
 
     const isOwner = userAddress == tokenOwner.toLowerCase();
 
+    let nftPriceUSD;
     let listing = await tradingContract.connect(signer).listings(tokenId);
     if (listing.isActive == false) {
         listing = null;
+        nftPriceUSD = null;
+    } else {
+        const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+        const data = await response.json();
+        const ethUsd = data.ethereum.usd;
+        nftPriceUSD = Number(listing.price) * ethUsd;
     }
 
     // Fetch NFT metadata from the IPFS storage
@@ -42,10 +49,10 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         owner: tokenOwner,
         metadata: metadata,
         listing: listing,
+        priceUSD: nftPriceUSD,
         stats: stats,
         isForSale: listing != null
     }
-
 
     res.render("nft", {
         nft: nft, 

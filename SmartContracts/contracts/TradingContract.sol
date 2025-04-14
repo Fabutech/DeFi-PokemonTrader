@@ -10,6 +10,7 @@ contract TradingContract {
     struct Listing {
         address seller;
         uint256 price;
+        uint256 expiration;
         bool isActive;
     }
 
@@ -73,17 +74,19 @@ contract TradingContract {
 
     // ********************** FIXED-PRICE LISTING **********************
 
-    function listNFT(uint256 tokenId, uint256 price) external onlyTokenOwner(tokenId) {
+    function listNFT(uint256 tokenId, uint256 price, uint256 expiration) external onlyTokenOwner(tokenId) {
         require(nftContract.getApproved(tokenId) == address(this) || nftContract.isApprovedForAll(msg.sender, address(this)),
             "Marketplace not approved to manage this NFT");
+        require(expiration > block.timestamp, "Expiration must be in the future");
 
-        listings[tokenId] = Listing(msg.sender, price, true);
+        listings[tokenId] = Listing(msg.sender, price, expiration, true);
         emit NFTListed(tokenId, msg.sender, price);
     }
 
     function buyNFT(uint256 tokenId) external payable isListed(tokenId) {
         Listing memory listedNFT = listings[tokenId];
         require(msg.value >= listedNFT.price, "Insufficient funds");
+        require(block.timestamp <= listedNFT.expiration, "Listing has expired");
 
         // Pay the seller
         payable(listedNFT.seller).transfer(msg.value);
