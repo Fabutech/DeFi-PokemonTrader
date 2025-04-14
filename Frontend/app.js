@@ -25,7 +25,7 @@ const nftOwnershipSchema = new mongoose.Schema({
 });
 const DB = mongoose.model('NFTOwnership', nftOwnershipSchema);
 
-export function runApp(tradingContract, nftContract, signer, helia) {
+export function runApp(tradingContract, tradingContractABI, nftContract, nftContractABI, signer, helia) {
     const app = express();
     const PORT = 3000;
 
@@ -51,7 +51,7 @@ export function runApp(tradingContract, nftContract, signer, helia) {
 
     // ROUTES
 
-    routes(app, DB, tradingContract, nftContract, signer, helia);
+    routes(app, DB, tradingContract, tradingContractABI, nftContract, nftContractABI, signer, helia);
 
     // Start server
     app.listen(PORT, () => {

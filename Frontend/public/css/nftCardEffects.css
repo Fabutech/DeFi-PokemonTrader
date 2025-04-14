@@ -34,7 +34,7 @@ body:not(.dark) .enhanced-card {
 }
 
 .nft-img-wrapper img {
-    width: 200px;
+    width: 250px;
     height: auto;
     transition: transform 0.4s ease;
 }

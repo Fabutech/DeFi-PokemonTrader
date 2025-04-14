@@ -1,0 +1,13 @@
+.nft-grid-wrapper {
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.nft-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1400px;
+}

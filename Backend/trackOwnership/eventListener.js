@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers, Interface } from 'ethers';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
@@ -16,27 +16,35 @@ let mongooseConnected = false;
 
 export function setupEventListener(contractAddress) {
     connectMongoDB()
+    
+    // Wipe the NFTOwnership collection
+    NFTOwnership.deleteMany({})
+        .then(() => {
+            console.log(`${time()} Cleared NFTOwnership database`);
+        })
+        .catch((err) => {
+            console.error(`${time()} Error clearing database:`, err);
+        });
 
     // Set up Ethers.js provider to connect to local Hardhat network
     const provider = new ethers.JsonRpcProvider('http://localhost:8545');
 
-    // ERC721 contract address and ABI
+    // ERC721 contract ABI
     const abi = [
-    "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"
+      "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"
     ];
-
-    // Create contract instance
-    const contract = new ethers.Contract(contractAddress, abi, provider);
+    
+    const iface = new Interface(abi);
+    const contract = new ethers.Contract(contractAddress, iface, provider);
 
     // Listen for Transfer events
     contract.on("Transfer", async (from, to, tokenId) => {
-        //console.log(`${time()} Token ID ${tokenId} transferred from ${from} to ${to}`);
-
         try {
             // Check if tokenId exists in the DB
             const existingRecord = await NFTOwnership.findOne({ tokenId });
 
             if (existingRecord) {
+                console.log(`${time()} Token ID ${tokenId} transferred from ${from} to ${to}`);
                 // If the token is already in the DB, update the owner address
                 existingRecord.ownerAddress = to.toLowerCase();
                 existingRecord.lastUpdated = Date.now();

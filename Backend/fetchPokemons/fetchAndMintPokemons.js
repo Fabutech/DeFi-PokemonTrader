@@ -141,12 +141,19 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
   const tradingContract = await deployTradingContract(signer, await nftContract.getAddress());
   console.log(`${time()} ✅ Trading contract is deployed to: ${await tradingContract.getAddress()}`);
 
-  console.log(`${time()} Approving Trading Contract...`);
-  await approveTradingContract(signer, nftContract, await tradingContract.getAddress());
-  console.log(`${time()} ✅ Trading contract is approved to trade all NFT's of ${ownerAddress}`);
+  // console.log(`${time()} Approving Trading Contract...`);
+  // await approveTradingContract(signer, nftContract, await tradingContract.getAddress());
+  // console.log(`${time()} ✅ Trading contract is approved to trade all NFT's of ${ownerAddress}`);
 
   console.log(`${time()} Deploying Frontend website...`);
-  runApp(tradingContract, nftContract, signer, helia);
+  runApp(
+    tradingContract, 
+    TRADING_JSON.abi, 
+    nftContract, 
+    ERC721_JSON.abi,
+    signer, 
+    helia
+  );
   console.log(`${time()} ✅ Successfully deployed website at: localhost:3000`);
 
   console.log(`${time()} {\n 🚀 Script finished successfully!\n    - ERC721 Contract launched\n    - Trading Contract launched\n    - All NFT's minted \n    - Trading Contract approved to trade NFT's\n    - Event Listener setup and MongoDB connected\n}`);

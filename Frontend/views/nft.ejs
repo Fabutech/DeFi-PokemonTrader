@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %> | Poke Trader</title>
+  <link rel="icon" type="image/doge-icon" href="../images/favicon-96x96.ico">
+
+  <!-- Style sheets -->
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/nftCardEffects.css">
+  <link rel="stylesheet" href="../css/singleNFTStyle.css">
+
+  <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+
+  <style>
+    .approval-popup {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .popup-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+      text-align: center;
+    }
+    .popup-buttons {
+      margin-top: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .popup-buttons .blue-btn,
+    .popup-buttons .white-btn {
+      flex: 1;
+      margin: 0 5px;
+    }
+    #approval-status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+</head>
+<body>
+  <%- include("partials/navbar") -%>
+
+  <section class="main-container nft-detail-wrapper">
+    <div class="nft-detail-left">
+        <div class="nft-card enhanced-card">
+            <div class="nft-img-wrapper">
+                <img src="<%= nft.metadata.image.front_default %>" alt="NFT Image">
+                <div class="nft-details">
+                    <div class="nft-description"><strong>Type:</strong> <%= nft.metadata.description %></div>
+                    <div class="nft-row">
+                        <div><strong>Height:</strong> <%= nft.metadata.height %></div>
+                        <div><strong>Weight:</strong> <%= nft.metadata.weight %></div>
+                    </div>
+                    <div class="nft-row">
+                        <div><strong>hp:</strong> <%= nft.metadata.attributes["hp"] %></div>
+                        <div><strong>speed:</strong> <%= nft.metadata.attributes["speed"] %></div>
+                    </div>
+                    <div class="nft-row">
+                        <div><strong>defense:</strong> <%= nft.metadata.attributes["defense"] %></div>
+                        <div><strong>attack:</strong> <%= nft.metadata.attributes["attack"] %></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nft-detail-right">
+      <h1 class="nft-title"><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %> #<%= nft.tokenId %></h1>
+      <div class="nft-owner">Owned by <%= nft.owner %></div>
+
+      <div class="nft-metrics">
+        <span><i class='bx bx-show'></i> <%= nft.stats.views %> views</span>
+        <span><i class='bx bx-heart'></i> <%= nft.stats.favorites %> favorites</span>
+      </div>
+
+      <% if (nft.isForSale) { %>
+        <div class="nft-sale-timer">
+          Sale ends <span id="saleEndDate"><%= nft.saleEnd %></span>
+          <div class="timer" id="countdown"></div>
+        </div>
+
+        <div class="nft-price">
+          <h2><%= nft.listing.price %> ETH</h2>
+          <p>≈ $<%= nft.priceUSD %></p>
+        </div>
+
+        <% if (!isOwner) { %>
+            <div class="nft-action-buttons">
+            <button id="buy-btn" class="blue-btn" data-price="<%= nft.listing.price %>">Buy now</button>
+            <button id="offer-btn" class="white-btn">Make offer</button>
+            </div>
+        <% } %>
+      <% } %>
+
+    <% if (isOwner) { %>
+        <div class="nft-action-buttons">
+            <% if (!nft.isForSale) { %>
+                <button id="listNFTbtn" class="blue-btn">List NFT</button>
+            <% } else { %>
+                <button id="delistNFTbtn" class="blue-btn">Delist NFT</button>
+            <% } %>
+        </div>
+    <% } %>
+    </div>
+  </section>
+
+  <!-- Scripts -->
+  <script>
+    const tokenId = "<%= nft.tokenId %>";
+    const tradingAddress = "<%= tradingContractAddress %>";
+    const tradingABI = JSON.parse(`<%- JSON.stringify(tradingContractABI) %>`);
+    
+    const userAddress = "<%= nft.owner %>";
+    const nftContractAddress = "<%= nftContractAddress %>";
+    const nftContractABI = JSON.parse(`<%- JSON.stringify(nftContractABI) %>`); 
+  </script>
+
+  <script src="../js/singleNFTTimer.js"></script>
+  <script src="../js/nftCardEffects.js"></script>
+  <script src="../js/navbar.js"></script>
+  <script src="../js/web3-utils.js"></script>
+</body>
+</html>

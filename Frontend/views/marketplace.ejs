@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace | Poke Trader</title>
+    <link rel="icon" type="image/doge-icon" href="../images/favicon-96x96.ico">
+
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/marketplace.css">
+    <link rel="stylesheet" href="../css/nftCardEffects.css">
+
+    <!-- Boxicons CSS -->
+    <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+</head>
+<body>
+    <%- include("partials/navbar") -%>
+
+    <section class="main-container home">
+        <div class="main-content-wrapper">
+            <div class="text">Marketplace</div> <!--make it so it detects username?-->
+
+
+            <!-- ------------ -->
+            <!-- NFTs Grid Section -->
+            <div class="nft-grid-wrapper">
+                <div class="nft-grid-container">
+                    <% nfts.forEach(nft => { %>
+                        <a href="/nft/<%= nft.tokenId %>" class="nft-link" style="text-decoration: none;">
+                            <div class="nft-card enhanced-card">
+                                <div class="nft-img-wrapper">
+                                    <img src="<%= nft.metadata.image.front_default %>" alt="NFT Image">
+                                    <div class="nft-details">
+                                        <h2 class="nft-name"><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %></h2>
+                                        <div class="nft-description"><strong>Type:</strong> <%= nft.metadata.description %></div>
+                                        <div class="nft-row">
+                                            <div><strong>Height:</strong> <%= nft.metadata.height %></div>
+                                            <div><strong>Weight:</strong> <%= nft.metadata.weight %></div>
+                                        </div>
+                                        <div class="nft-row">
+                                            <div><strong>hp:</strong> <%= nft.metadata.attributes["hp"] %></div>
+                                            <div><strong>speed:</strong> <%= nft.metadata.attributes["speed"] %></div>
+                                        </div>
+                                        <div class="nft-row">
+                                            <div><strong>defense:</strong> <%= nft.metadata.attributes["defense"] %></div>
+                                            <div><strong>attack:</strong> <%= nft.metadata.attributes["attack"] %></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    <% }) %>
+                </div>
+            </div>
+
+    <!--JavaScript-->
+    <script src="../js/navbar.js"></script>
+    <script src="../js/web3-utils.js"></script>
+    <script src="../js/nftCardEffects.js"></script>
+</body>
+</html>

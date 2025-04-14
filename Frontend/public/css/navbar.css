@@ -1,52 +1,5 @@
-/*This style is used for all pages to get a coherent website feeling*/
-/* Google Font Import - Poppins for nicer fonts*/
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif; /* add chosen poppins fonts for all elements*/ 
-}
-
-:root{
-    /*Light mode color palette*/
-    --body-color: #E4E9F7;
-    --sidebar-color: #FFF;
-    --primary-color: #695CFE;
-    --primary-color-light: #F6F5FF;
-    --toggle-color: #DDD;
-    --text-color: #707070;
-
-    /* Transition for smooth transition between light and dark mode*/
-    --tran-03: all 0.2s ease;
-    --tran-03: all 0.3s ease;
-    --tran-04: all 0.3s ease;
-    --tran-05: all 0.3s ease;
-}
-
-body{
-    min-height: 100vh;
-    background-color: var(--body-color); /*var property inserts color from the colorpalette, makes it easier to work with light/dark mode*/
-    transition: var(--tran-05);
-}
-
-::selection{
-    background-color: var(--primary-color);
-    color: #fff;
-}
-
-/*dark mode color palette*/
-body.dark{
-    --body-color: #18191a;
-    --sidebar-color: #242526;
-    --primary-color: #3a3b3c;
-    --primary-color-light: #3a3b3c;
-    --toggle-color: #fff;
-    --text-color: #ccc;
-}
-
 /*Sidebar styles*/
- .sidebar{
+.sidebar{
     position: fixed;
     top: 0;
     left: 0;
@@ -271,30 +224,12 @@ body.dark .switch::before{
     left: 20px;
 }
 
-.home{
-    position: absolute;
-    top: 0;
-    top: 0;
-    left: 250px;
-    height: 100vh;
-    width: calc(100% - 250px);
-    background-color: var(--body-color);
-    transition: var(--tran-05);
-}
-.home .text{
-    font-size: 30px;
-    font-weight: 500;
-    color: var(--text-color);
-    padding: 12px 60px;
-    margin-bottom: 42px;
-}
-
-.sidebar.close ~ .home{ /* ~ selector --> only applies style if .home follows .sidebar.close */
+.sidebar.close ~ .main-container{ /* ~ selector --> only applies style if .main-container follows .sidebar.close */
     left: 78px;
     height: 100vh;
     width: calc(100% - 78px);
 }
-body.dark .home .text{
+body.dark .main-container .text{
     color: var(--text-color); /* that text color is white while on darkmode*/
 }
 
