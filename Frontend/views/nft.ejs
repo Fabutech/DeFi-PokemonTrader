@@ -86,6 +86,14 @@
           </div>
           <% } %>
         </div>
+      <% } else if (isOwner) { %>
+        <div class="nft-sale-actions">
+          <% if (!nft.isForSale) { %>
+              <button id="listNFTbtn" class="blue-btn">List NFT</button>
+          <% } else { %>
+              <button id="delistNFTbtn" class="blue-btn">Delist NFT</button>
+          <% } %>
+        </div>
       <% } %>
     </div>
   </section>
