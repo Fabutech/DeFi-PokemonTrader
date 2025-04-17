@@ -30,7 +30,7 @@ contract TradingContract {
 
     // NFT Events
     event NFTListed(uint256 indexed tokenId, address seller, uint256 price);
-    event NFTSold(uint256 indexed tokenId, address buyer, uint256 price);
+    event NFTSold(uint256 indexed tokenId, address seller, address buyer, uint256 price);
     event NFTDelisted(uint256 indexed tokenId, address seller);
 
     // Auction Events
@@ -97,7 +97,7 @@ contract TradingContract {
         // Remove listing
         delete listings[tokenId];
 
-        emit NFTSold(tokenId, msg.sender, msg.value);
+        emit NFTSold(tokenId, listedNFT.seller, msg.sender, msg.value);
     }
 
     function delistNFT(uint256 tokenId) external onlyTokenOwner(tokenId) isListed(tokenId) {

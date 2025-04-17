@@ -22,13 +22,7 @@ async function deployNFTContract(signer) {
   const NFTContract = new ethers.ContractFactory(ERC721_JSON.abi, ERC721_JSON.bytecode, signer);
   const nftContract = await NFTContract.deploy("PokeNFT", "PKN");
   await nftContract.waitForDeployment(); // Wait for deployment
-  
-  const contractAddress = await nftContract.getAddress();
-
-  console.log(`${time()} Starting to setup contract event listener`);
-  await setupEventListener(contractAddress);
-  console.log(`${time()} ✅ Successfully setup event listener`);
-  
+    
   return nftContract;
 }
 
@@ -87,15 +81,24 @@ function time() {
   
   // Main function
 async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
+  console.log(`${time()} Script successfully started.`);
+
   // Ethereum and contract setup (Hardhat local node)
   const provider = new ethers.JsonRpcProvider("http://localhost:8545");
   const signer = await provider.getSigner();
 
   // Deploy new ERC721 contract on the local hardhat testnet
-  console.log(`${time()} Script successfully started.`);
   console.log(`${time()} Starting to deploy ERC721 contract...`);
   const nftContract = await deployNFTContract(signer);
   console.log(`${time()} 🚀 Contract deployed at: ${await nftContract.getAddress()} Owner: ${ownerAddress}`);
+
+  console.log(`${time()} Deploying Trading Contract...`);
+  const tradingContract = await deployTradingContract(signer, await nftContract.getAddress());
+  console.log(`${time()} ✅ Trading contract is deployed to: ${await tradingContract.getAddress()}`);
+
+  console.log(`${time()} Starting to setup contract event listener`);
+  await setupEventListener(await nftContract.getAddress(), ERC721_JSON.abi, await tradingContract.getAddress(), TRADING_JSON.abi, true);
+  console.log(`${time()} ✅ Successfully setup event listener`);
 
   // Fetch Pokemon metadata from pokeapi
   console.log(`${time()} Starting to fetch Pokemon metadata from pokeapi...`);
@@ -135,10 +138,6 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
   console.log(`${time()} Starting to mint NFTs...`);
   await batchMintNFTs(signer, nftContract, ownerAddress, ipfsURIs);
   console.log(`${time()} ✅ All Pokémon NFTs minted to: ${ownerAddress}`);
-
-  console.log(`${time()} Deploying Trading Contract...`);
-  const tradingContract = await deployTradingContract(signer, await nftContract.getAddress());
-  console.log(`${time()} ✅ Trading contract is deployed to: ${await tradingContract.getAddress()}`);
 
   // console.log(`${time()} Approving Trading Contract...`);
   // await approveTradingContract(signer, nftContract, await tradingContract.getAddress());
