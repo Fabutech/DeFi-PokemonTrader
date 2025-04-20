@@ -1,0 +1,67 @@
+.balance {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    padding-left: 60px;
+    padding-right: 60px;
+}
+
+.balance-card {
+    background-color: var(--sidebar-color);
+    height: 80px;
+    width: 300px;
+    border-radius: 6px;
+    transition: var(--tran-05); /*soft transition*/
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    font-weight: 600;
+    gap: 4px;
+}
+
+.balance-card.middle {
+    height: 120px;
+    width: 350px;
+    font-size: larger;
+}
+
+.balance-header {
+    color: var(--primary-color);
+    font-weight: bolder;
+    font-size: larger;
+    align-items: center;
+}
+
+.balance-card.middle .balance-header {
+    font-size: xx-large;
+}
+
+
+body.dark .balance-header{
+    color: var(--text-color);
+}
+
+.chart-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 60px;
+    margin-left: 100px;
+    margin-right: 100px;
+    background-color: #FFF;
+    border-radius: 6px;
+    height:55%; /*nice aspect ratio for chart*/
+    transition: var(--tran-05); /*soft transition*/
+    box-sizing: border-box;
+    color: #707070;
+    padding: 20px;
+}
+
+.activity-container {
+    margin-left: 60px;
+    margin-right: 60px;
+}

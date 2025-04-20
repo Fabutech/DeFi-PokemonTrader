@@ -50,105 +50,111 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
     const tradingContract = new ethers.Contract(tradingContractAddress, tradingIface, provider);
 
     // Listen for Transfer events
-    nftContract.on("Transfer", async (from, to, tokenId) => {
-        try {
-            // Check if tokenId exists in the DB
-            const existingRecord = await NFTOwnership.findOne({ tokenId });
-
-            if (existingRecord) {
-                // If the token is already in the DB, update the owner address
-                existingRecord.ownerAddress = to.toLowerCase();
-                existingRecord.lastUpdated = Date.now();
-                await existingRecord.save();
-            } else {
-                // If the token is new, create a new record
-                const newOwnership = new NFTOwnership({ tokenId, ownerAddress: to.toLowerCase() });
-                await newOwnership.save();
+    try {
+        nftContract.on("Transfer", async (from, to, tokenId) => {
+            try {
+                // Check if tokenId exists in the DB
+                const existingRecord = await NFTOwnership.findOne({ tokenId });
+    
+                if (existingRecord) {
+                    // If the token is already in the DB, update the owner address
+                    existingRecord.ownerAddress = to.toLowerCase();
+                    existingRecord.lastUpdated = Date.now();
+                    await existingRecord.save();
+                } else {
+                    // If the token is new, create a new record
+                    const newOwnership = new NFTOwnership({ tokenId, ownerAddress: to.toLowerCase() });
+                    await newOwnership.save();
+                }
+    
+                if (from.toLowerCase() === ethers.ZeroAddress.toLocaleLowerCase()) {
+                  await saveEvent('Mint', {
+                    tokenId: tokenId.toString(),
+                    from: from.toLowerCase(),
+                    to: to.toLowerCase()
+                  });
+                } else {
+                  await saveEvent('Transfer', {
+                    tokenId: tokenId.toString(),
+                    from: from.toLowerCase(),
+                    to: to.toLowerCase()
+                  });
+                }
+            } catch (error) {
+                console.log(`${time()} Error processing Transfer event: ${error}`);
             }
-
-            if (from.toLowerCase() === ethers.ZeroAddress.toLocaleLowerCase()) {
-              await saveEvent('Mint', {
-                tokenId: tokenId.toString(),
-                from: from.toLowerCase(),
-                to: to.toLowerCase()
-              });
-            } else {
-              await saveEvent('Transfer', {
-                tokenId: tokenId.toString(),
-                from: from.toLowerCase(),
-                to: to.toLowerCase()
-              });
+        });
+    
+        const saveEvent = async (eventType, data) => {
+            try {
+                const event = new TradingEvent({ eventType, ...data });
+                await event.save();
+                console.log(`${time()} Saved ${eventType} event:`, data);
+            } catch (error) {
+                console.error(`${time()} Failed to save ${eventType} event:`, error);
             }
-        } catch (error) {
-            console.log(`${time()} Error processing Transfer event: ${error}`);
-        }
-    });
-
-    const saveEvent = async (eventType, data) => {
-        try {
-            const event = new TradingEvent({ eventType, ...data });
-            await event.save();
-            console.log(`${time()} Saved ${eventType} event:`, data);
-        } catch (error) {
-            console.error(`${time()} Failed to save ${eventType} event:`, error);
-        }
-    };
-
-    tradingContract.on('NFTListed', async (tokenId, seller, price, event) => {
-        await saveEvent('List', {
-            tokenId: tokenId.toString(),
-            from: seller.toLowerCase(),
-            price: price.toString()
+        };
+    
+        tradingContract.on('NFTListed', async (tokenId, seller, price, event) => {
+            await saveEvent('List', {
+                tokenId: tokenId.toString(),
+                from: seller.toLowerCase(),
+                price: price.toString()
+            });
+      });
+    
+        tradingContract.on('NFTSold', async (tokenId, seller, buyer, price, event) => {
+            await saveEvent('Sale', {
+                tokenId: tokenId.toString(),
+                from: seller.toLowerCase(),
+                to: buyer.toLowerCase(),
+                price: ethers.formatEther(price)
+            });
         });
-  });
-
-    tradingContract.on('NFTSold', async (tokenId, seller, buyer, price, event) => {
-        await saveEvent('Sale', {
-            tokenId: tokenId.toString(),
-            from: seller.toLowerCase(),
-            to: buyer.toLowerCase(),
-            price: price.toString()
+    
+        tradingContract.on('AuctionStarted', async (tokenId, seller, startPrice, endTime, event) => {
+            await saveEvent('AuctionStarted', {
+                tokenId: tokenId.toString(),
+                from: seller.toLowerCase(),
+                price: startPrice.toString()
+            });
         });
-    });
-
-    tradingContract.on('AuctionStarted', async (tokenId, seller, startPrice, endTime, event) => {
-        await saveEvent('AuctionStarted', {
-            tokenId: tokenId.toString(),
-            from: seller.toLowerCase(),
-            price: startPrice.toString()
+    
+        tradingContract.on('NewBid', async (tokenId, bidder, amount, event) => {
+            await saveEvent('NewBid', {
+                tokenId: tokenId.toString(),
+                from: bidder.toLowerCase(),
+                price: amount.toString()
+            });
         });
-    });
-
-    tradingContract.on('NewBid', async (tokenId, bidder, amount, event) => {
-        await saveEvent('NewBid', {
-            tokenId: tokenId.toString(),
-            from: bidder.toLowerCase(),
-            price: amount.toString()
+    
+        tradingContract.on('AuctionEnded', async (tokenId, winner, amount, event) => {
+            await saveEvent('AuctionEnded', {
+                tokenId: tokenId.toString(),
+                to: winner.toLowerCase(),
+                price: amount.toString()
+            });
         });
-    });
-
-    tradingContract.on('AuctionEnded', async (tokenId, winner, amount, event) => {
-        await saveEvent('AuctionEnded', {
-            tokenId: tokenId.toString(),
-            to: winner.toLowerCase(),
-            price: amount.toString()
+    
+        tradingContract.on('NFTDelisted', async (tokenId, seller, event) => {
+            await saveEvent('Delist', {
+                tokenId: tokenId.toString(),
+                from: seller.toLowerCase()
+            });
         });
-    });
-
-    tradingContract.on('NFTDelisted', async (tokenId, seller, event) => {
-        await saveEvent('Delist', {
-            tokenId: tokenId.toString(),
-            from: seller.toLowerCase()
+    
+        tradingContract.on('BidWithdrawn', async (tokenId, bidder, amount, event) => {
+            await saveEvent('BidWithdrawn', {
+                tokenId: tokenId.toString(),
+                from: bidder.toLowerCase(),
+                price: amount.toString()
+            });
         });
-    });
-
-    tradingContract.on('BidWithdrawn', async (tokenId, bidder, amount, event) => {
-        await saveEvent('BidWithdrawn', {
-            tokenId: tokenId.toString(),
-            from: bidder.toLowerCase(),
-            price: amount.toString()
-        });
-    });
+    } catch (e) {
+        console.log(e);
+        setupEventListener(nftContractAddress, nftContractABI, tradingContractAddress, tradingContractABI);
+    }
+    
 }
 
 async function connectMongoDB() {

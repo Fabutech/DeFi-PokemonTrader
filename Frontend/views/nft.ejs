@@ -10,6 +10,9 @@
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="stylesheet" href="../css/nftCardEffects.css">
   <link rel="stylesheet" href="../css/singleNFTStyle.css">
+  <link rel="stylesheet" href="../css/transactionHistory.css">
+
+  <script src="../js/transactionHistoryLoader.js"></script>
 
   <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
 
@@ -17,86 +20,110 @@
 </head>
 <body>
   <%- include("partials/navbar") -%>
-
-  <section class="main-container nft-detail-wrapper">
-    <div class="nft-detail-left">
-        <div class="nft-card enhanced-card">
-            <div class="nft-img-wrapper">
-                <img src="<%= nft.metadata.image %>" alt="NFT Image">
-                <div class="nft-details">
-                    <div class="nft-description"><strong>Type:</strong> <%= nft.metadata.description %></div>
-                    <div class="nft-row">
-                        <div><strong>Height:</strong> <%= nft.metadata.height %></div>
-                        <div><strong>Weight:</strong> <%= nft.metadata.weight %></div>
-                    </div>
-                    <div class="nft-row">
-                        <div><strong>hp:</strong> <%= nft.metadata.attributes["hp"] %></div>
-                        <div><strong>speed:</strong> <%= nft.metadata.attributes["speed"] %></div>
-                    </div>
-                    <div class="nft-row">
-                        <div><strong>defense:</strong> <%= nft.metadata.attributes["defense"] %></div>
-                        <div><strong>attack:</strong> <%= nft.metadata.attributes["attack"] %></div>
+  <div class="scrollable-container main-container">
+    <div class="vertical-stack col">
+      <section class="row nft-detail-wrapper">
+        <div class="nft-detail-left">
+            <div class="nft-card enhanced-card">
+                <div class="nft-img-wrapper">
+                    <img src="<%= nft.metadata.image %>" alt="NFT Image">
+                    <div class="nft-details">
+                        <div class="nft-description"><strong>Type:</strong> <%= nft.metadata.description %></div>
+                        <div class="nft-row">
+                            <div><strong>Height:</strong> <%= nft.metadata.height %></div>
+                            <div><strong>Weight:</strong> <%= nft.metadata.weight %></div>
+                        </div>
+                        <div class="nft-row">
+                            <div><strong>hp:</strong> <%= nft.metadata.attributes["hp"] %></div>
+                            <div><strong>speed:</strong> <%= nft.metadata.attributes["speed"] %></div>
+                        </div>
+                        <div class="nft-row">
+                            <div><strong>defense:</strong> <%= nft.metadata.attributes["defense"] %></div>
+                            <div><strong>attack:</strong> <%= nft.metadata.attributes["attack"] %></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="nft-detail-right">
-      <h1 class="nft-title"><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %> #<%= nft.tokenId %></h1>
-      <div class="nft-owner">Owned by <%= nft.owner %></div>
+        <div class="nft-detail-right">
+          <h1 class="nft-title"><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %> #<%= nft.tokenId %></h1>
+          <div class="nft-owner">Owned by <%= nft.owner %></div>
 
-      <div class="nft-metrics">
-        <span><i class='bx bx-show'></i> <%= nft.stats.views %> views</span>
-        <span><i class='bx bx-heart'></i> <%= nft.stats.favorites %> favorites</span>
-      </div>
-
-      <% if (nft.isForSale) { %>
-        <div class="nft-sale-price-box">
-          <div class="nft-sale-section">
-            <div class="nft-sale-header">Sale ends <span id="saleEndDate"><%= nft.listing.expiration %></span></div>
-            <div class="nft-sale-timer-grid">
-              <div><span id="hours" class="time-part">00</span><div class="time-label">Hours</div></div>
-              <div><span id="minutes" class="time-part">00</span><div class="time-label">Minutes</div></div>
-              <div><span id="seconds" class="time-part">00</span><div class="time-label">Seconds</div></div>
-            </div>
+          <div class="nft-metrics">
+            <span><i class='bx bx-show'></i> <%= nft.stats.views %> views</span>
+            <span><i class='bx bx-heart'></i> <%= nft.stats.favorites %> favorites</span>
           </div>
-          <div class="divider-line"></div>
-          <div class="nft-price-section">
-            <div class="nft-price-label">Current price</div>
-            <div class="nft-price-value">
-              <span><%= nft.listing.price %> ETH</span>
-              <% if (nft.priceUSD) { %>
-                <span class="usd-price">$<%= nft.priceUSD.toFixed(2) %></span>
+
+          <% if (nft.isForSale) { %>
+            <div class="nft-sale-price-box">
+              <div class="nft-sale-section">
+                <div class="nft-sale-header">Sale ends <span id="saleEndDate"><%= nft.listing.expiration %></span></div>
+                <div class="nft-sale-timer-grid">
+                  <div><span id="hours" class="time-part">00</span><div class="time-label">Hours</div></div>
+                  <div><span id="minutes" class="time-part">00</span><div class="time-label">Minutes</div></div>
+                  <div><span id="seconds" class="time-part">00</span><div class="time-label">Seconds</div></div>
+                </div>
+              </div>
+              <div class="divider-line"></div>
+              <div class="nft-price-section">
+                <div class="nft-price-label">Current price</div>
+                <div class="nft-price-value">
+                  <span><%= nft.listing.price %> ETH</span>
+                  <% if (nft.priceUSD) { %>
+                    <span class="usd-price">$<%= nft.priceUSD.toFixed(2) %></span>
+                  <% } %>
+                </div>
+              </div>
+              <% if (!isOwner) { %>
+                <div class="nft-sale-actions">
+                  <button id="buy-btn" class="blue-btn half-width" data-price="<%= nft.listing.price %>">Buy now</button>
+                  <button id="offer-btn" class="white-btn half-width">Make offer</button>
+                </div>
+              <% } else { %>
+                <div class="nft-sale-actions">
+                  <% if (!nft.isForSale) { %>
+                      <button id="listNFTbtn" class="blue-btn">List NFT</button>
+                  <% } else { %>
+                      <button id="delistNFTbtn" class="blue-btn">Delist NFT</button>
+                  <% } %>
+              </div>
               <% } %>
             </div>
-          </div>
-          <% if (!isOwner) { %>
-            <div class="nft-sale-actions">
-              <button id="buy-btn" class="blue-btn half-width" data-price="<%= nft.listing.price %>">Buy now</button>
-              <button id="offer-btn" class="white-btn half-width">Make offer</button>
-            </div>
-          <% } else { %>
+          <% } else if (isOwner) { %>
             <div class="nft-sale-actions">
               <% if (!nft.isForSale) { %>
                   <button id="listNFTbtn" class="blue-btn">List NFT</button>
               <% } else { %>
                   <button id="delistNFTbtn" class="blue-btn">Delist NFT</button>
               <% } %>
+            </div>
+          <% } %>
+        </div>
+      </section>
+
+      <!-- Transactions Section -->
+      <div class="activity-container">
+        <div class="activity-header">
+          <h2>Item Activity</h2>
+        </div>
+ 
+        <div class="activity-table">
+          <div class="activity-table-header">
+            <div class="activity-col">Event</div>
+            <div class="activity-col">Price</div>
+            <div class="activity-col">From</div>
+            <div class="activity-col">To</div>
+            <div class="activity-col">Date</div>
           </div>
-          <% } %>
+          <div id="transaction-history" class="activity-body">
+            <!-- Transactions will be inserted here -->
+          </div>
         </div>
-      <% } else if (isOwner) { %>
-        <div class="nft-sale-actions">
-          <% if (!nft.isForSale) { %>
-              <button id="listNFTbtn" class="blue-btn">List NFT</button>
-          <% } else { %>
-              <button id="delistNFTbtn" class="blue-btn">Delist NFT</button>
-          <% } %>
-        </div>
-      <% } %>
+      </div>
     </div>
-  </section>
+  </div> <!-- close vertical-stack -->
+</div> <!-- close scrollable-container -->
 
   <!-- Approval Popup -->
   <div id="approval-popup" class="approval-popup" style="display: none;">
@@ -152,6 +179,8 @@
     const userAddress = "<%= nft.owner %>";
     const nftContractAddress = "<%= nftContractAddress %>";
     const nftContractABI = JSON.parse(`<%- JSON.stringify(nftContractABI) %>`); 
+
+    loadTransactionHistory("single");
   </script>
 
   <script src="../js/singleNFTTimer.js"></script>

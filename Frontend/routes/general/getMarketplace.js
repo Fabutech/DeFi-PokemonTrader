@@ -5,7 +5,7 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
     const decoder = new TextDecoder();
     const fs = unixfs(helia);
 
-    const allNFTs = await DB.find({});
+    const allNFTs = await DB.ownership.find({});
 
     const listedNfts = await Promise.all(
         allNFTs.map(async nft => {

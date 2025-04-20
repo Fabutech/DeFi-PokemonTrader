@@ -150,10 +150,15 @@ window.addEventListener('DOMContentLoaded', async () => {
                     return;
                 }
 
+                console.log("clicked")
+
                 const listingPopup = document.getElementById("listing-popup");
                 listingPopup.style.display = "flex";
 
-                const closeListing = () => listingPopup.style.display = "none";
+                const closeListing = () => {
+                    console.log("closed")
+                    listingPopup.style.display = "none"
+                };
                 document.getElementById("close-listing-popup").onclick = closeListing;
 
                 document.getElementById("confirm-listing").onclick = async () => {

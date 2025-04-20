@@ -11,7 +11,7 @@ export default async function getUserNFTs(req, res, DB, nftContract, signer, hel
     const decoder = new TextDecoder();
     const fs = unixfs(helia);
 
-    const nftsFromDB = await DB.find({ "ownerAddress": userAddress });
+    const nftsFromDB = await DB.ownership.find({ "ownerAddress": userAddress });
 
     const nfts = await Promise.all(nftsFromDB.map(async (nft) => {
         try {
@@ -34,5 +34,5 @@ export default async function getUserNFTs(req, res, DB, nftContract, signer, hel
         }
     }));
 
-    res.render("myNFTs", { nfts });
+    res.render("myNFTs", {nfts: nfts, userAddress: userAddress});
 }

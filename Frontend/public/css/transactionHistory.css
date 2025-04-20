@@ -1,0 +1,135 @@
+
+  /* Full-page scrollable container */
+  .scrollable-container {
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  /* Stack sections vertically */
+  .vertical-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 40px; /* adds space between detail and transactions */
+  }
+  
+  /* Optional: make the transaction cards scrollable if needed */
+  #transaction-history {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 500px; /* Optional: control max size */
+    overflow-y: auto;
+  }
+  
+  /* Optional: Scrollbar styling */
+  .scrollable-container::-webkit-scrollbar,
+  #transaction-history::-webkit-scrollbar {
+    width: 8px;
+  }
+  .scrollable-container::-webkit-scrollbar-thumb,
+  #transaction-history::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+  
+  
+  .activity-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px 28px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 40px;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  .activity-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  
+  .activity-filter {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+  }
+  
+  .activity-filter-input {
+    padding: 10px 14px;
+    border: 2px solid #2563eb;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    width: 220px;
+  }
+  
+  .activity-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .activity-table-header,
+  .activity-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 0;
+  }
+  
+  .activity-table-header {
+    font-weight: 600;
+    color: #555;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .activity-body .activity-row {
+    font-weight: 500;
+    color: #444;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+  }
+  
+  .activity-body .activity-row:hover {
+    background-color: #f9fafb;
+  }
+  
+  .activity-col {
+    flex: 1;
+    text-align: left;
+    font-size: 14px;
+  }
+  
+  .activity-col:nth-child(2) {
+    font-weight: 600;
+  }
+  
+  .activity-col:last-child {
+    color: #333;
+    font-family: monospace;
+    font-size: 13px;
+  }
+  
+  .long-card {
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+    margin: 8px 0px;
+    background-color: #FFF;
+    border-radius: 6px;
+    height: 100px;
+    transition: var(--tran-05); /*soft transition*/
+    box-sizing: border-box;
+  }
+  
+  .testing {
+    display: flex;
+    justify-content: left;
+    align-items: left;
+    flex: 1;
+    max-width: 100;
+    text-align: left;
+    color: #707070;
+    font-weight: 600;
+  }

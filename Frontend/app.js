@@ -23,7 +23,18 @@ const nftOwnershipSchema = new mongoose.Schema({
     ownerAddress: { type: String, required: true },
     lastUpdated: { type: Date, default: Date.now },
 });
-const DB = mongoose.model('NFTOwnership', nftOwnershipSchema);
+const tradingEventSchema = new mongoose.Schema({
+    eventType: { type: String, required: true },
+    tokenId: { type: String },
+    from: { type: String },
+    to: { type: String },
+    price: { type: String },
+    timestamp: { type: Date, default: Date.now }
+});
+const DB = {
+  ownership: mongoose.model('NFTOwnership', nftOwnershipSchema),  
+  transactions: mongoose.model('TradingEvent', tradingEventSchema)
+};
 
 export function runApp(tradingContract, tradingContractABI, nftContract, nftContractABI, signer, helia) {
     const app = express();

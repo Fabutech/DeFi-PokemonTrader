@@ -10,9 +10,12 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="../css/styles.css">
-    <link rel="stylesheet" href="../css/dashboard_portfoliostyle.css">
+    <link rel="stylesheet" href="../css/myNFTs.css">
     <link rel="stylesheet" href="../css/horizontalNFTPresenter.css">
     <link rel="stylesheet" href="../css/nftCardEffects.css">
+    <link rel="stylesheet" href="../css/transactionHistory.css">
+
+    <script src="../js/transactionHistoryLoader.js"></script>
 
     <!-- Boxicons CSS -->
     <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
@@ -75,30 +78,26 @@
                     <% }) %>
                     </div>
                 </div>
-            
-
-    <!-- -------------------- -->
-    <!-- Transactions Section -->
-            <div class="header2">Transaction History</div>
-
-            <div class="description-card"> 
-                <div class="desc number">#</div>
-                <div class="desc">Name</div>
-                <div class="desc">current Price in ETH</div>
-                <div class="desc">Value in $USD</div>
             </div>
-
-            <div class="long-card">
-                <div class="testing number">1</div>
-                <div class="testing">
-                    <div class="crypto-container">
-                        <div class="crypto-icon"></div>
-                        <div class="crypto-name">Bulbasaur</div>
-                        <div class="crypto-abbreviation">Bulb</div>
-                    </div>
+            
+            <!-- Transactions Section -->
+            <div class="activity-container">
+                <div class="activity-header">
+                <h2>Your Activity</h2>
                 </div>
-                <div class="testing">1.5 ETH</div>
-                <div class="testing">1500$</div>
+        
+                <div class="activity-table">
+                <div class="activity-table-header">
+                    <div class="activity-col">Event</div>
+                    <div class="activity-col">Price</div>
+                    <div class="activity-col">From</div>
+                    <div class="activity-col">To</div>
+                    <div class="activity-col">Date</div>
+                </div>
+                <div id="transaction-history" class="activity-body">
+                    <!-- Transactions will be inserted here -->
+                </div>
+                </div>
             </div>
             
             <div class="spacer"></div>
@@ -106,6 +105,12 @@
     </section>
 
     <!--JavaScript-->
+    <script>
+        const userAddress = "<%= userAddress %>";
+
+        loadTransactionHistory("address");
+    </script>
+
     <script src="../js/navbar.js"></script>
     <script src="../js/web3-utils.js"></script>
     <script src="../js/nftCardEffects.js"></script>
