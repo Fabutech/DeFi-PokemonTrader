@@ -1,6 +1,6 @@
 import express from 'express';
 
-export default function index(DB) {
+export default function index(DB, tradingContract, signer) {
     const MainRouter = express.Router();
 
     MainRouter.route("/connect")
@@ -55,6 +55,31 @@ export default function index(DB) {
             .limit(limit);
 
         res.json(all);
+    });
+
+    MainRouter.route("/offers/:tokenId")
+    .get(async (req, res) => {
+        const tokenId = req.params.tokenId;
+
+        let offers = await tradingContract.connect(signer).getOffers(tokenId);
+        let listing = await tradingContract.connect(signer).listings(tokenId);
+
+        const serializeBigInts = (obj) => JSON.parse(
+            JSON.stringify(obj, (_, v) => (typeof v === "bigint" ? v.toString() : v))
+        );
+
+        let filteredOffers = [];
+        if (offers) {
+            filteredOffers = offers
+                .map(o => [...o]) // clone into plain arrays since original array is immutable
+                .filter(offer => offer[0] != 0n) // filter out zero address
+                .sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0)); // sort by offer price in descending order
+        }
+          
+        res.json(serializeBigInts({
+            offers: filteredOffers,
+            currentPrice: listing.price
+        }));
     });
 
     return MainRouter

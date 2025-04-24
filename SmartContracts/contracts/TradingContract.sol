@@ -14,6 +14,12 @@ contract TradingContract {
         bool isActive;
     }
 
+    struct Offer {
+        address offerer;
+        uint256 amount;
+        uint256 expiration;
+    }
+
     struct Auction {
         address seller;
         uint256 startingPrice;
@@ -27,6 +33,8 @@ contract TradingContract {
     mapping(uint256 => Listing) public listings;
     mapping(uint256 => Auction) public auctions;
     mapping(uint256 => mapping(address => uint256)) public pendingReturns;
+    mapping(uint256 => mapping(address => Offer)) public offers;
+    mapping(uint256 => address[]) public offerers;
 
     // NFT Events
     event NFTListed(uint256 indexed tokenId, address seller, uint256 price);
@@ -38,6 +46,9 @@ contract TradingContract {
     event NewBid(uint256 indexed tokenId, address bidder, uint256 amount);
     event AuctionEnded(uint256 indexed tokenId, address winner, uint256 amount);
     event BidWithdrawn(uint256 indexed tokenId, address bidder, uint256 amount);
+    event OfferMade(uint256 indexed tokenId, address indexed offerer, uint256 amount, uint256 expiration);
+    event OfferCancelled(uint256 indexed tokenId, address indexed offerer);
+    event OfferAccepted(uint256 indexed tokenId, address indexed offerer, uint256 amount);
 
     // Modifiers
     modifier onlyOwner() {
@@ -180,5 +191,74 @@ contract TradingContract {
 
     function getAuctionDetails(uint256 tokenId) external view returns (Auction memory) {
         return auctions[tokenId];
+    }
+
+    function makeOffer(uint256 tokenId, uint256 expiration) external payable {
+        require(msg.value > 0, "Offer amount must be greater than zero");
+        require(expiration > block.timestamp, "Expiration must be in the future");
+
+        Offer storage existingOffer = offers[tokenId][msg.sender];
+        require(existingOffer.amount == 0, "You already have an active offer");
+
+        offers[tokenId][msg.sender] = Offer({
+            offerer: msg.sender,
+            amount: msg.value,
+            expiration: expiration
+        });
+
+        offerers[tokenId].push(msg.sender); // Track who made an offer
+
+        emit OfferMade(tokenId, msg.sender, msg.value, expiration);
+    }
+
+    function cancelOffer(uint256 tokenId) external {
+        Offer memory offer = offers[tokenId][msg.sender];
+        require(offer.amount > 0, "No offer to cancel");
+
+        uint256 refundAmount = offer.amount;
+        delete offers[tokenId][msg.sender];
+
+        // Remove offerer from the list
+        address[] storage addrs = offerers[tokenId];
+        for (uint256 i = 0; i < addrs.length; i++) {
+            if (addrs[i] == msg.sender) {
+                addrs[i] = addrs[addrs.length - 1];
+                addrs.pop();
+                break;
+            }
+        }
+
+        payable(msg.sender).transfer(refundAmount);
+        emit OfferCancelled(tokenId, msg.sender);
+    }
+
+    function acceptOffer(uint256 tokenId, address offerer) external onlyTokenOwner(tokenId) {
+        Offer memory offer = offers[tokenId][offerer];
+        require(offer.amount > 0, "No valid offer");
+        require(block.timestamp <= offer.expiration, "Offer expired");
+
+        delete offers[tokenId][offerer];
+
+        // Pay the seller
+        payable(msg.sender).transfer(offer.amount);
+
+        // Transfer the NFT to buyer
+        nftContract.safeTransferFrom(msg.sender, offerer, tokenId);
+
+        // Remove listing
+        delete listings[tokenId];
+
+        emit OfferAccepted(tokenId, offerer, offer.amount);
+    }
+
+    function getOffers(uint256 tokenId) external view returns (Offer[] memory) {
+        address[] memory addrs = offerers[tokenId];
+        uint256 count = addrs.length;
+
+        Offer[] memory result = new Offer[](count);
+        for (uint256 i = 0; i < count; i++) {
+            result[i] = offers[tokenId][addrs[i]];
+        }
+        return result;
     }
 }

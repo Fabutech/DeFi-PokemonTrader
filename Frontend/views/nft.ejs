@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="../css/transactionHistory.css">
 
   <script src="../js/transactionHistoryLoader.js"></script>
+  <script src="../js/web3-utils.js"></script>
 
   <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
 
@@ -69,7 +70,7 @@
               <div class="nft-price-section">
                 <div class="nft-price-label">Current price</div>
                 <div class="nft-price-value">
-                  <span><%= nft.listing.price %> ETH</span>
+                  <span><%= nft.priceETH %> ETH</span>
                   <% if (nft.priceUSD) { %>
                     <span class="usd-price">$<%= nft.priceUSD.toFixed(2) %></span>
                   <% } %>
@@ -78,7 +79,11 @@
               <% if (!isOwner) { %>
                 <div class="nft-sale-actions">
                   <button id="buy-btn" class="blue-btn half-width" data-price="<%= nft.listing.price %>">Buy now</button>
-                  <button id="offer-btn" class="white-btn half-width">Make offer</button>
+                  <% if (!hasActiveOffer) { %>
+                    <button id="offer-btn" class="white-btn half-width">Make offer</button>
+                  <% } else { %>
+                    <button id="withdraw-offer-btn" class="white-btn half-width">Withdraw offer</button>
+                  <% } %>
                 </div>
               <% } else { %>
                 <div class="nft-sale-actions">
@@ -89,6 +94,25 @@
                   <% } %>
               </div>
               <% } %>
+            </div>
+
+            <!-- Offers Section -->
+            <div class="activity-container">
+              <div class="activity-header">
+                <h2>Offers</h2>
+              </div>
+       
+              <div class="activity-table">
+                <div class="activity-table-header">
+                  <div class="activity-col">Price</div>
+                  <div class="activity-col">Difference</div>
+                  <div class="activity-col">Expiration</div>
+                  <div class="activity-col">From</div>
+                </div>
+                <div id="offers-table" class="activity-body">
+                  <!-- Offers will be inserted here -->
+                </div>
+              </div>
             </div>
           <% } else if (isOwner) { %>
             <div class="nft-sale-actions">
@@ -105,7 +129,7 @@
       <!-- Transactions Section -->
       <div class="activity-container">
         <div class="activity-header">
-          <h2>Item Activity</h2>
+          <h2>NFT Activity</h2>
         </div>
  
         <div class="activity-table">
@@ -124,6 +148,13 @@
     </div>
   </div> <!-- close vertical-stack -->
 </div> <!-- close scrollable-container -->
+
+  <!-- Status Popup -->
+  <div id="status-popup" class="approval-popup" style="display: none;">
+    <div class="popup-content" style="position: relative;">
+      <div id="status"></div>
+    </div>
+  </div>
 
   <!-- Approval Popup -->
   <div id="approval-popup" class="approval-popup" style="display: none;">
@@ -170,6 +201,36 @@
     </div>
   </div>
 
+  <!-- Offer Popup -->
+  <div id="offer-popup" class="approval-popup" style="display: none;">
+    <div class="popup-content" style="position: relative;">
+      <span id="close-offer-popup" style="position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px;">&times;</span>
+      <h2>Make an Offer</h2>
+      <p>Set your offer amount and the expiration date and time.</p>
+      
+      <div class="popup-field">
+        <label for="offer-amount"><strong>Offer Amount (ETH):</strong></label>
+        <input type="number" id="offer-amount" placeholder="e.g. 0.5" min="0" step="0.01" />
+      </div>
+
+      <div class="popup-field">
+        <label for="offer-date"><strong>Expiration Date:</strong></label>
+        <input type="date" id="offer-date" />
+      </div>
+
+      <div class="popup-field">
+        <label for="offer-time"><strong>Expiration Time:</strong></label>
+        <input type="time" id="offer-time" />
+      </div>
+
+      <div class="popup-buttons" style="margin-top: 15px;">
+        <button id="submit-offer" class="blue-btn">Submit Offer</button>
+      </div>
+
+      <div id="offer-status" style="margin-top: 10px; font-weight: bold;"></div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script>
     const tokenId = "<%= nft.tokenId %>";
@@ -181,11 +242,32 @@
     const nftContractABI = JSON.parse(`<%- JSON.stringify(nftContractABI) %>`); 
 
     loadTransactionHistory("single");
+    loadTokenOffers("<%= isOwner %>");
+
+    setTimeout(() => {
+      setupListNFTHandler();
+      setupBuyNFTHandler();
+      setupOfferNFTHandler();   
+    }, 100);
+     
+
+    const offerBtn = document.getElementById("offer-btn");
+    const closeOfferPopupBtn = document.getElementById("close-offer-popup");
+
+    if (offerBtn) {
+      offerBtn.addEventListener("click", () => {
+        document.getElementById("offer-popup").style.display = "flex";
+      });
+    }
+    if (closeOfferPopupBtn) {
+      closeOfferPopupBtn.addEventListener("click", () => {
+        document.getElementById("offer-popup").style.display = "none";
+      });
+    }
   </script>
 
   <script src="../js/singleNFTTimer.js"></script>
   <script src="../js/nftCardEffects.js"></script>
   <script src="../js/navbar.js"></script>
-  <script src="../js/web3-utils.js"></script>
 </body>
 </html>

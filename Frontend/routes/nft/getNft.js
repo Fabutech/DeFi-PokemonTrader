@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import { TextDecoder } from 'util';
 import { unixfs } from "@helia/unixfs";
 
@@ -10,6 +11,12 @@ export default async function getNft(req, res, tradingContract, tradingContractA
 
     const isOwner = userAddress == tokenOwner.toLowerCase();
 
+    let hasActiveOffer = false;
+    if (userAddress) {
+        const offer = await tradingContract.connect(signer).offers(tokenId, userAddress);
+        hasActiveOffer = offer.amount > 0 && offer.expiration > Math.floor(Date.now() / 1000);
+    }
+
     let nftPriceUSD;
     let listing = await tradingContract.connect(signer).listings(tokenId);
     if (listing.isActive == false) {
@@ -20,7 +27,7 @@ export default async function getNft(req, res, tradingContract, tradingContractA
             const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
             const data = await response.json();
             const ethUsd = data.ethereum.usd;
-            nftPriceUSD = Number(listing.price) * ethUsd;
+            nftPriceUSD = Number(ethers.formatEther(listing.price.toString())) * ethUsd;
         } catch (e) {
             console.log("Error while fetching eth to usd exchange rate: " + e);
         }
@@ -53,6 +60,7 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         owner: tokenOwner,
         metadata: metadata,
         listing: listing,
+        priceETH: listing != null ? ethers.formatEther(listing.price.toString()) : 0,
         priceUSD: nftPriceUSD,
         stats: stats,
         isForSale: listing != null
@@ -61,6 +69,7 @@ export default async function getNft(req, res, tradingContract, tradingContractA
     res.render("nft", {
         nft: nft, 
         isOwner: isOwner,
+        hasActiveOffer: hasActiveOffer,
         tradingContractAddress: await tradingContract.getAddress(),
         tradingContractABI: tradingContractABI,
         nftContractAddress: await nftContract.getAddress(),

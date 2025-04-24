@@ -6,8 +6,8 @@
   }
   
   .nft-detail-left {
-    flex: 1;
-    min-width: 300px;
+    flex: 1 1 40%;
+    min-width: 380px;
     padding-right: 40px;
     display: flex;
     align-items: center;
@@ -15,7 +15,7 @@
   }
   
   .nft-detail-right {
-    flex: 1;
+    flex: 2 1 60%;
     min-width: 300px;
     display: flex;
     flex-direction: column;
@@ -176,10 +176,10 @@
   }
 
   .enhanced-card {
-    width: 400px;
+    width: 350px;
   }
   .nft-img-wrapper img {
-    width: 370px;
+    width: 300px;
 }
 
 #saleEndDate {
@@ -217,6 +217,30 @@
 }
 #approval-status {
   margin-top: 10px;
+  font-weight: bold;
+}
+
+
+.accept-offer-btn {
+  background-color: #28a745; /* Bootstrap-style success green */
+  color: white;
+  border: none;
+  padding: 3px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.accept-offer-btn:hover {
+  background-color: #218838;
+}
+
+.accept-offer-btn::before {
+  content: '✔'; /* Checkmark icon */
   font-weight: bold;
 }
 

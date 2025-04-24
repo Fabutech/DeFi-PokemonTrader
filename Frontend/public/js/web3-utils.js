@@ -1,4 +1,5 @@
 window.addEventListener('DOMContentLoaded', async () => {
+    // Helper to show status messages in popup
     const connectBtn = document.getElementById('connectWallet-btn');
     const connectText = document.getElementById('connectWallet-text');
     const connectIcon = document.getElementById('connectWallet-icon');
@@ -93,200 +94,317 @@ window.addEventListener('DOMContentLoaded', async () => {
         connectText.innerText = "MetaMask Not Found";
         connectBtn.disabled = true;
     }
+});
 
-    const setupListNFTHandler = () => {
-        const listBtn = document.getElementById("listNFTbtn");
-        const delistBtn = document.getElementById("delistNFTbtn");
+function setupListNFTHandler() {
+    const listBtn = document.getElementById("listNFTbtn");
+    const delistBtn = document.getElementById("delistNFTbtn");
 
-        const web3 = new Web3(window.ethereum);
-        const nftContract = new web3.eth.Contract(nftContractABI, nftContractAddress);
-        const tradingContract = new web3.eth.Contract(tradingABI, tradingAddress);
+    const web3 = new Web3(window.ethereum);
+    const nftContract = new web3.eth.Contract(nftContractABI, nftContractAddress);
+    const tradingContract = new web3.eth.Contract(tradingABI, tradingAddress);
 
-        if (listBtn) {
-            const showApprovalPopup = () => {
-                const popup = document.getElementById("approval-popup");
-                popup.style.display = "flex";
+    if (listBtn) {
+        const showApprovalPopup = () => {
+            const popup = document.getElementById("approval-popup");
+            popup.style.display = "flex";
 
-                const cleanup = () => {
-                    popup.style.display = "none";
-                    listBtn.click();
-                };
-
-                const statusDiv = document.getElementById("approval-status");
-                const updateStatus = (msg, success = true) => {
-                    statusDiv.innerText = msg;
-                    statusDiv.style.color = success ? 'green' : 'red';
-                };
-
-                document.getElementById("approve-single").onclick = async () => {
-                    try {
-                        await nftContract.methods.approve(tradingAddress, tokenId).send({ from: userAddress });
-                        updateStatus("✅ Single NFT approved!");
-                        setTimeout(cleanup, 2000);
-                    } catch (err) {
-                        updateStatus("❌ Approval failed.", false);
-                    }
-                };
-
-                document.getElementById("approve-all").onclick = async () => {
-                    try {
-                        await nftContract.methods.setApprovalForAll(tradingAddress, true).send({ from: userAddress });
-                        updateStatus("✅ All NFTs approved!");
-                        setTimeout(cleanup, 2000);
-                    } catch (err) {
-                        updateStatus("❌ Approval failed.", false);
-                    }
-                };
-
-                document.getElementById("close-approval-popup").onclick = cleanup;
+            const cleanup = () => {
+                popup.style.display = "none";
+                listBtn.click();
             };
 
-            listBtn.addEventListener("click", async () => {
-                const approvedAddress = await nftContract.methods.getApproved(tokenId).call();
-                const isOperatorApproved = await nftContract.methods.isApprovedForAll(userAddress, tradingAddress).call();
-          
-                if (approvedAddress.toLowerCase() !== tradingAddress.toLowerCase() && !isOperatorApproved) {
-                    showApprovalPopup();
+            const statusDiv = document.getElementById("approval-status");
+            const updateStatus = (msg, success = true) => {
+                statusDiv.innerText = msg;
+                statusDiv.style.color = success ? 'green' : 'red';
+            };
+
+            document.getElementById("approve-single").onclick = async () => {
+                try {
+                    await nftContract.methods.approve(tradingAddress, tokenId).send({ from: userAddress });
+                    updateStatus("✅ Single NFT approved!");
+                    setTimeout(cleanup, 2000);
+                } catch (err) {
+                    updateStatus("❌ Approval failed.", false);
+                }
+            };
+
+            document.getElementById("approve-all").onclick = async () => {
+                try {
+                    await nftContract.methods.setApprovalForAll(tradingAddress, true).send({ from: userAddress });
+                    updateStatus("✅ All NFTs approved!");
+                    setTimeout(cleanup, 2000);
+                } catch (err) {
+                    updateStatus("❌ Approval failed.", false);
+                }
+            };
+
+            document.getElementById("close-approval-popup").onclick = cleanup;
+        };
+
+        listBtn.addEventListener("click", async () => {
+            const approvedAddress = await nftContract.methods.getApproved(tokenId).call();
+            const isOperatorApproved = await nftContract.methods.isApprovedForAll(userAddress, tradingAddress).call();
+      
+            if (approvedAddress.toLowerCase() !== tradingAddress.toLowerCase() && !isOperatorApproved) {
+                showApprovalPopup();
+                return;
+            }
+
+            console.log("clicked")
+
+            const listingPopup = document.getElementById("listing-popup");
+            listingPopup.style.display = "flex";
+
+            const closeListing = () => {
+                console.log("closed")
+                listingPopup.style.display = "none"
+            };
+            document.getElementById("close-listing-popup").onclick = closeListing;
+
+            document.getElementById("confirm-listing").onclick = async () => {
+                const priceInEth = document.getElementById("listing-price").value;
+                const price = Web3.utils.toWei(priceInEth, "ether");
+                const date = document.getElementById("listing-date").value;
+                const time = document.getElementById("listing-time").value;
+
+                if (!priceInEth || !date || !time) {
+                    document.getElementById("listing-status").innerText = "⚠️ Please fill in all fields.";
+                    document.getElementById("listing-status").style.color = "red";
                     return;
                 }
 
-                console.log("clicked")
+                const expiration = Math.floor(new Date(`${date}T${time}`).getTime() / 1000);
 
-                const listingPopup = document.getElementById("listing-popup");
-                listingPopup.style.display = "flex";
-
-                const closeListing = () => {
-                    console.log("closed")
-                    listingPopup.style.display = "none"
-                };
-                document.getElementById("close-listing-popup").onclick = closeListing;
-
-                document.getElementById("confirm-listing").onclick = async () => {
-                    const priceEth = document.getElementById("listing-price").value;
-                    const date = document.getElementById("listing-date").value;
-                    const time = document.getElementById("listing-time").value;
-
-                    if (!priceEth || !date || !time) {
-                        document.getElementById("listing-status").innerText = "⚠️ Please fill in all fields.";
-                        document.getElementById("listing-status").style.color = "red";
-                        return;
-                    }
-
-                    const expiration = Math.floor(new Date(`${date}T${time}`).getTime() / 1000);
-
-                    try {
-                        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-                        const account = accounts[0];
-
-                        const estimatedGas = await tradingContract.methods.listNFT(tokenId, priceEth, expiration).estimateGas({ from: account });
-                        await tradingContract.methods.listNFT(tokenId, priceEth, expiration).send({
-                            from: account,
-                            gas: estimatedGas + 1000n
-                        });
-
-                        document.getElementById("listing-status").innerText = "✅ NFT listed successfully!";
-                        document.getElementById("listing-status").style.color = "green";
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
-                    } catch (err) {
-                        console.error("Failed to list NFT", err);
-                        document.getElementById("listing-status").innerText = "❌ " + err.message;
-                        document.getElementById("listing-status").style.color = "red";
-                    }
-                };
-            });
-        }
-
-        if (delistBtn) {
-            delistBtn.addEventListener("click", async () => {
                 try {
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                     const account = accounts[0];
-                    if (!account) {
-                        alert("Please connect your wallet first.");
-                        return;
-                    }
-    
-                    if (typeof window.ethereum === 'undefined') {
-                        alert("MetaMask is not installed. Please install it to use this feature.");
-                        return;
-                    }
-    
-                    const estimatedGas = await tradingContract.methods.delistNFT(tokenId).estimateGas({ from: account });
-                    await tradingContract.methods.delistNFT(tokenId).send({
+
+                    const estimatedGas = await tradingContract.methods.listNFT(tokenId, price, expiration).estimateGas({ from: account });
+                    await tradingContract.methods.listNFT(tokenId, price, expiration).send({
                         from: account,
                         gas: estimatedGas + 1000n
                     });
-    
-                    alert("NFT listed successfully!");
-                    location.reload();
+
+                    document.getElementById("listing-status").innerText = "✅ NFT listed successfully!";
+                    document.getElementById("listing-status").style.color = "green";
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
                 } catch (err) {
                     console.error("Failed to list NFT", err);
-                    alert("Error: " + err.message);
+                    document.getElementById("listing-status").innerText = "❌ " + err.message;
+                    document.getElementById("listing-status").style.color = "red";
                 }
-            });
+            };
+        });
+    }
+
+    if (delistBtn) {
+        delistBtn.addEventListener("click", async () => {
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                const account = accounts[0];
+                if (!account) {
+                    showStatusMessage("Please connect your wallet first.", false);
+                    return;
+                }
+
+                if (typeof window.ethereum === 'undefined') {
+                    showStatusMessage("MetaMask is not installed. Please install it to use this feature.", false);
+                    return;
+                }
+
+                const estimatedGas = await tradingContract.methods.delistNFT(tokenId).estimateGas({ from: account });
+                await tradingContract.methods.delistNFT(tokenId).send({
+                    from: account,
+                    gas: estimatedGas + 1000n
+                });
+
+                showStatusMessage("✅ NFT delisted successfully!");
+            } catch (err) {
+                console.error("Failed to list NFT", err);
+                showStatusMessage("❌ " + err.message, false);
+            }
+        });
+    }
+}
+    
+function setupBuyNFTHandler() {
+    const buyBtn = document.getElementById("buy-btn");
+
+    if (typeof tradingABI === 'string') {
+        try {
+            tradingABI = JSON.parse(tradingABI);
+        } catch (err) {
+            console.error("Invalid ABI format:", err);
+            alert("Failed to parse contract ABI.");
+            return;
         }
     }
-        
-    const setupBuyNFTHandler = () => {
-        const buyBtn = document.getElementById("buy-btn");
 
-        if (typeof tradingABI === 'string') {
+    if (buyBtn) {
+        buyBtn.addEventListener("click", async () => {
             try {
-                tradingABI = JSON.parse(tradingABI);
+                const priceInEth = buyBtn.getAttribute("data-price"); // e.g., "0.1"
+                const price = Web3.utils.toWei(priceInEth, "ether");
+
+                if (!tokenId || !price) {
+                    showStatusMessage("Token ID or price not provided.", false);
+                    return;
+                }
+
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                const account = accounts[0];
+                if (!account) {
+                    showStatusMessage("Please connect your wallet first.", false);
+                    return;
+                }
+
+                if (typeof window.ethereum === 'undefined') {
+                    showStatusMessage("MetaMask is not installed. Please install it to use this feature.", false);
+                    return;
+                }
+
+                const web3 = new Web3(window.ethereum);
+                const contract = new web3.eth.Contract(tradingABI, tradingAddress);
+
+                const estimatedGas = await contract.methods.buyNFT(tokenId).estimateGas({ from: account, value: price });
+                await contract.methods.buyNFT(tokenId).send({
+                    from: account,
+                    value: price,
+                    gas: estimatedGas + 1000n
+                });
+
+                showStatusMessage("✅ NFT purchased successfully!");
             } catch (err) {
-                console.error("Invalid ABI format:", err);
-                alert("Failed to parse contract ABI.");
+                console.error("Failed to buy NFT", err);
+                showStatusMessage("❌ " + err.message, false);
+            }
+        });
+    }
+};
+
+function setupOfferNFTHandler() {
+    const offerBtn = document.getElementById("submit-offer");
+    const withdrawBtn = document.getElementById("withdraw-offer-btn");
+
+    if (offerBtn) {
+        offerBtn.addEventListener("click", async () => {
+            const offerAmount = document.getElementById("offer-amount").value;
+            const date = document.getElementById("offer-date").value;
+            const time = document.getElementById("offer-time").value;
+
+            const offerStatus = document.getElementById("offer-status");
+
+            if (!offerAmount || !date || !time) {
+                offerStatus.innerText = "⚠️ Please fill in all fields.";
+                offerStatus.style.color = "red";
                 return;
             }
-        }
 
-        if (buyBtn) {
-            buyBtn.addEventListener("click", async () => {
-                try {
-                    const priceInEth = buyBtn.getAttribute("data-price"); // e.g., "0.1"
-                    const price = Web3.utils.toWei(priceInEth, "ether");
+            const expiration = Math.floor(new Date(`${date}T${time}`).getTime() / 1000);
+            const amountInWei = Web3.utils.toWei(offerAmount, "ether");
 
-                    console.log("PRICE: " + price)
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                const account = accounts[0];
 
-                    if (!tokenId || !price) {
-                        alert("Token ID or price not provided.");
-                        return;
-                    }
+                const web3 = new Web3(window.ethereum);
+                const contract = new web3.eth.Contract(tradingABI, tradingAddress);
 
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-                    const account = accounts[0];
-                    if (!account) {
-                        alert("Please connect your wallet first.");
-                        return;
-                    }
+                const estimatedGas = await contract.methods.makeOffer(tokenId, expiration).estimateGas({
+                    from: account,
+                    value: amountInWei
+                });
 
-                    if (typeof window.ethereum === 'undefined') {
-                        alert("MetaMask is not installed. Please install it to use this feature.");
-                        return;
-                    }
+                await contract.methods.makeOffer(tokenId, expiration).send({
+                    from: account,
+                    value: amountInWei,
+                    gas: estimatedGas + 1000n
+                });
 
-                    const web3 = new Web3(window.ethereum);
-                    const contract = new web3.eth.Contract(tradingABI, tradingAddress);
-
-                    const estimatedGas = await contract.methods.buyNFT(tokenId).estimateGas({ from: account, value: price });
-                    await contract.methods.buyNFT(tokenId).send({
-                        from: account,
-                        value: price,
-                        gas: estimatedGas + 1000n
-                    });
-
-                    alert("NFT purchased successfully!");
+                offerStatus.innerText = "✅ Offer submitted successfully!";
+                offerStatus.style.color = "green";
+                setTimeout(() => {
                     location.reload();
-                } catch (err) {
-                    console.error("Failed to buy NFT", err);
-                    alert("Error: " + err.message);
-                }
-            });
-        }
-    };
+                }, 2000);
+            } catch (err) {
+                console.error("Failed to submit offer", err);
+                offerStatus.innerText = "❌ " + err.message;
+                offerStatus.style.color = "red";
+            }
+        });
+    }
 
-    setupListNFTHandler();
-    setupBuyNFTHandler();
-});
+    if (withdrawBtn) {
+        withdrawBtn.addEventListener("click", async () => {
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                const account = accounts[0];
+                const web3 = new Web3(window.ethereum);
+                const contract = new web3.eth.Contract(tradingABI, tradingAddress);
+
+                const estimatedGas = await contract.methods.cancelOffer(tokenId).estimateGas({ from: account });
+
+                await contract.methods.cancelOffer(tokenId).send({
+                    from: account,
+                    gas: estimatedGas + 1000n
+                });
+
+                showStatusMessage("✅ Offer withdrawn successfully!");
+            } catch (err) {
+                console.error("Failed to withdraw offer", err);
+                showStatusMessage("❌ " + err.message, false);
+            }
+        });
+    }
+
+    // Accept offer buttons
+    const acceptBtns = document.querySelectorAll(".accept-offer-btn");
+    console.log(acceptBtns);
+    acceptBtns.forEach(btn => {
+        console.log("SETUP")
+        btn.addEventListener("click", async () => {
+            console.log("click noticed")
+            const offerer = btn.getAttribute("data");
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                const account = accounts[0];
+                const web3 = new Web3(window.ethereum);
+                const contract = new web3.eth.Contract(tradingABI, tradingAddress);
+
+                const estimatedGas = await contract.methods.acceptOffer(tokenId, offerer).estimateGas({
+                    from: account
+                });
+
+                await contract.methods.acceptOffer(tokenId, offerer).send({
+                    from: account,
+                    gas: estimatedGas + 1000n
+                });
+
+                showStatusMessage("✅ Offer accepted successfully!");
+            } catch (err) {
+                console.error("Failed to accept offer", err);
+                showStatusMessage("❌ " + err.message, false);
+            }
+        });
+    });
+};
+
+function showStatusMessage(message, isSuccess = true) {
+    const popup = document.getElementById("status-popup");
+    const statusDiv = document.getElementById("status");
+
+    statusDiv.innerText = message;
+    statusDiv.style.color = isSuccess ? "green" : "red";
+
+    popup.style.display = "flex";
+    setTimeout(() => {
+        popup.style.display = "none";
+        if (isSuccess) {
+            location.reload();
+        }
+    }, 2000);
+};

@@ -99,7 +99,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
             await saveEvent('List', {
                 tokenId: tokenId.toString(),
                 from: seller.toLowerCase(),
-                price: price.toString()
+                price: ethers.formatEther(price)
             });
       });
     
@@ -148,6 +148,29 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
                 tokenId: tokenId.toString(),
                 from: bidder.toLowerCase(),
                 price: amount.toString()
+            });
+        });
+
+        tradingContract.on('OfferMade', async (tokenId, offerer, amount, expiration, event) => {
+            await saveEvent('OfferMade', {
+                tokenId: tokenId.toString(),
+                from: offerer.toLowerCase(),
+                price: ethers.formatEther(amount)
+            });
+        });
+
+        tradingContract.on('OfferCancelled', async (tokenId, offerer, event) => {
+            await saveEvent('OfferCancelled', {
+                tokenId: tokenId.toString(),
+                from: offerer.toLowerCase()
+            });
+        });
+
+        tradingContract.on('OfferAccepted', async (tokenId, offerer, amount, event) => {
+            await saveEvent('OfferAccepted', {
+                tokenId: tokenId.toString(),
+                to: offerer.toLowerCase(),
+                price: ethers.formatEther(amount)
             });
         });
     } catch (e) {

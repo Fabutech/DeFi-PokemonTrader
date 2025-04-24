@@ -37,8 +37,60 @@ async function loadTransactionHistory(type, page="0") {
     } catch (err) {
       console.error("Failed to load transaction history", err);
     }
-  }
+}
 
-  function truncateAddress(addr) {
-    return addr.slice(0, 6) + '...' + addr.slice(-4);
+async function loadTokenOffers(isOwner) {
+  try {
+    const response = await fetch(`/api/offers/${tokenId}`);
+    const data = await response.json();
+
+    const offers = data.offers;
+    const currentPrice =  parseFloat(Web3.utils.fromWei(data.currentPrice.toString(), "ether")); // Assuming ETH price string
+
+    console.log(offers);
+    console.log(currentPrice);
+
+    const offersTable = document.getElementById('offers-table');
+
+    offers.forEach(offer => {
+      const offerPrice = parseFloat(Web3.utils.fromWei(offer[1].toString(), "ether"));
+      const expirationDate = new Date(offer[2] * 1000).toLocaleString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/(\d{2})[\/.-](\d{2})[\/.-](\d{4}),?/, (match, d, m, y) => {
+        return `${d}.${m}.${y}`;
+      });
+
+      const diff = currentPrice > 0 ? (((offerPrice - currentPrice) / currentPrice) * 100).toFixed(1) : "0";
+      const diffLabel = `${Math.abs(diff)}% ${diff < 0 ? "below" : "above"}`;
+
+      const card = document.createElement('div');
+      card.className = 'long-card';
+      if (isOwner === "true") {
+        card.innerHTML = `
+          <div class="testing">${offerPrice} ETH</div>
+          <div class="testing">${diffLabel}</div>
+          <div class="testing">${expirationDate}</div>
+          <div class="testing">${truncateAddress(offer[0])}</div>
+          <button class="accept-offer-btn" data="${offer[0]}"></button>
+        `;
+      } else {
+        card.innerHTML = `
+          <div class="testing">${offerPrice} ETH</div>
+          <div class="testing">${diffLabel}</div>
+          <div class="testing">${expirationDate}</div>
+          <div class="testing">${truncateAddress(offer[0])}</div>
+        `;
+      }
+
+      offersTable.appendChild(card);
+    });
+  } catch (err) {
+    console.error("Failed to load token offers", err);
   }
+}
+
+function truncateAddress(addr) {
+return addr.slice(0, 6) + '...' + addr.slice(-4);
+}
