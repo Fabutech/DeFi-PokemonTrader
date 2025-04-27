@@ -19,7 +19,7 @@ export default async function getNft(req, res, tradingContract, tradingContractA
 
     let nftPriceUSD;
     let listing = await tradingContract.connect(signer).listings(tokenId);
-    if (listing.isActive == false) {
+    if (listing.isActive === false) {
         listing = null;
         nftPriceUSD = null;
     } else {
@@ -32,6 +32,33 @@ export default async function getNft(req, res, tradingContract, tradingContractA
             console.log("Error while fetching eth to usd exchange rate: " + e);
         }
     }
+
+    const auctionData = await tradingContract.connect(signer).auctions(tokenId);
+    let auction = null;
+    if (!listing && auctionData.isActive) {
+        let startingPriceUSD, highestBidUSD;
+        try {
+            const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+            const data = await response.json();
+            const ethUsd = data.ethereum.usd;
+
+            startingPriceUSD = Number(ethers.formatEther(auctionData.startingPrice.toString())) * ethUsd
+            highestBidUSD = Number(ethers.formatEther(auctionData.highestBid.toString())) * ethUsd
+        } catch (e) {
+            console.log("Error while fetching eth to usd exchange rate: " + e);
+        }
+
+        auction = {
+            auction: auctionData,
+            startingPriceETH: ethers.formatEther(auctionData.startingPrice.toString()),
+            startingPriceUSD: startingPriceUSD,
+            highestBidETH: ethers.formatEther(auctionData.highestBid.toString()),
+            highestBidUSD: highestBidUSD,
+            hasBid: auctionData.highestBid.toString() != 0,
+            hasEnded: auctionData.endTimestamp.toString() != "0" && Number(auctionData.endTimestamp.toString()) <= Math.floor(Date.now() / 1000)
+        }
+    }
+    
 
     // Fetch NFT metadata from the IPFS storage
     const decoder = new TextDecoder();
@@ -60,16 +87,19 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         owner: tokenOwner,
         metadata: metadata,
         listing: listing,
+        auction: auction,
         priceETH: listing != null ? ethers.formatEther(listing.price.toString()) : 0,
         priceUSD: nftPriceUSD,
         stats: stats,
-        isForSale: listing != null
+        isListed: listing != null,
+        isOnAuction: auction != null
     }
 
     res.render("singleNft/nft", {
         nft: nft, 
         isOwner: isOwner,
         hasActiveOffer: hasActiveOffer,
+        hasPendingReturns: userAddress ? await tradingContract.connect(signer).hasPendingReturns(tokenId, userAddress) : false,
         tradingContractAddress: await tradingContract.getAddress(),
         tradingContractABI: tradingContractABI,
         nftContractAddress: await nftContract.getAddress(),

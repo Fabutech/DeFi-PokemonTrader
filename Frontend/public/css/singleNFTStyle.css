@@ -57,6 +57,7 @@
     border: 1px solid #ccc;
   }
   .nft-sale-price-box {
+    min-width: 500px;
     border: 1px solid #e0e0e0;
     border-radius: 10px;
     padding: 20px;
@@ -187,9 +188,33 @@
 }
 
 
-/* ---------------- */
-/* Approval PopUp */
-.approval-popup {
+/* -------- */
+/* Auctions */
+.auction-price-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+.auction-price-item {
+  flex: 1;
+}
+
+ .finalize-auction-motivation {
+   font-size: 16px;
+   font-weight: bold;
+   color: black;
+   text-align: center;
+   background: rgba(0, 191, 255, 0.15);
+   padding: 2px;
+   border-radius: 8px;
+   box-shadow: 0 0 10px rgba(0, 191, 255, 0.4);
+   margin-top: 20px;
+ }
+
+
+/* ----- */
+/* Popup */
+.popup {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.5);

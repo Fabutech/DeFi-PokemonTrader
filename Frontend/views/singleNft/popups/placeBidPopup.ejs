@@ -1,0 +1,18 @@
+<div id="placeBid-popup" class="popup" style="display: none;">
+    <div class="popup-content" style="position: relative;">
+      <span id="close-placeBid-popup" style="position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px;">&times;</span>
+      <h2>Place a bid</h2>
+      <p>Place a bid for the auction of this NFT. Your bid price must be higher than the current highest Bid.</p>
+      
+      <div class="popup-field">
+        <label for="listing-price"><strong>Bid Price (ETH):</strong></label>
+        <input type="number" id="placeBid-price" placeholder="e.g. 0.5" min="<%= nft.priceETH %>" step="0.01"/>
+      </div>
+
+      <div class="popup-buttons" style="margin-top: 15px;">
+        <button id="confirm-placeBid" class="blue-btn">Place Bid</button>
+      </div>
+
+      <div id="placeBid-status" style="margin-top: 10px; font-weight: bold;"></div>
+    </div>
+</div>

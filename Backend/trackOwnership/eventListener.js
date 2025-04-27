@@ -116,7 +116,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
             await saveEvent('AuctionStarted', {
                 tokenId: tokenId.toString(),
                 from: seller.toLowerCase(),
-                price: startPrice.toString()
+                price: ethers.formatEther(startPrice)
             });
         });
     
@@ -124,7 +124,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
             await saveEvent('NewBid', {
                 tokenId: tokenId.toString(),
                 from: bidder.toLowerCase(),
-                price: amount.toString()
+                price: ethers.formatEther(amount)
             });
         });
     
@@ -132,7 +132,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
             await saveEvent('AuctionEnded', {
                 tokenId: tokenId.toString(),
                 to: winner.toLowerCase(),
-                price: amount.toString()
+                price: ethers.formatEther(amount)
             });
         });
     
@@ -147,7 +147,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
             await saveEvent('BidWithdrawn', {
                 tokenId: tokenId.toString(),
                 from: bidder.toLowerCase(),
-                price: amount.toString()
+                price: ethers.formatEther(amount)
             });
         });
 

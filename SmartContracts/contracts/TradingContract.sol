@@ -25,7 +25,8 @@ contract TradingContract {
         uint256 startingPrice;
         uint256 highestBid;
         address highestBidder;
-        uint256 endTime;
+        uint256 startTimestamp;
+        uint256 endTimestamp;
         bool isActive;
     }
 
@@ -68,13 +69,12 @@ contract TradingContract {
 
     modifier isAuctionActive(uint256 tokenId) {
         require(auctions[tokenId].isActive, "Auction is not active");
-        require(block.timestamp < auctions[tokenId].endTime, "Auction has ended");
         _;
     }
 
     modifier isAuctionEnded(uint256 tokenId) {
         require(auctions[tokenId].isActive, "Auction is not active");
-        require(block.timestamp >= auctions[tokenId].endTime, "Auction is still ongoing");
+        require(block.timestamp >= auctions[tokenId].endTimestamp, "Auction is still ongoing");
         _;
     }
 
@@ -118,7 +118,7 @@ contract TradingContract {
 
     // ********************** AUCTION SYSTEM **********************
 
-    function startAuction(uint256 tokenId, uint256 startingPrice, uint256 duration) external onlyTokenOwner(tokenId) {
+    function startAuction(uint256 tokenId, uint256 startingPrice, uint256 endTimeStamp) external onlyTokenOwner(tokenId) {
         require(nftContract.getApproved(tokenId) == address(this) || nftContract.isApprovedForAll(msg.sender, address(this)),
             "Marketplace not approved to manage this NFT");
 
@@ -127,15 +127,19 @@ contract TradingContract {
             startingPrice: startingPrice,
             highestBid: 0,
             highestBidder: address(0),
-            endTime: block.timestamp + duration,
+            startTimestamp: block.timestamp,
+            endTimestamp: endTimeStamp,
             isActive: true
         });
 
-        emit AuctionStarted(tokenId, msg.sender, startingPrice, block.timestamp + duration);
+        emit AuctionStarted(tokenId, msg.sender, startingPrice, endTimeStamp);
     }
 
     function placeBid(uint256 tokenId) external payable isAuctionActive(tokenId) {
+        require(block.timestamp < auctions[tokenId].endTimestamp, "Auction has ended");
+
         Auction storage auction = auctions[tokenId];
+        require(msg.value >= auction.startingPrice, "Bid must be higher or equal than current highest");
         require(msg.value > auction.highestBid, "Bid must be higher than current highest");
 
         // Refund previous highest bidder
@@ -163,16 +167,22 @@ contract TradingContract {
         Auction storage auction = auctions[tokenId];
         require(auction.highestBidder != address(0), "No bids placed");
 
+        uint256 reward = auction.highestBid / 100; // 1% reward
+        uint256 payout = auction.highestBid - reward;
+
         // Transfer NFT to winner
         nftContract.safeTransferFrom(auction.seller, auction.highestBidder, tokenId);
 
-        // Pay seller
-        payable(auction.seller).transfer(auction.highestBid);
+        // Pay seller minus reward
+        payable(auction.seller).transfer(payout);
+
+        // Pay finalizer reward
+        payable(msg.sender).transfer(reward);
+
+        emit AuctionEnded(tokenId, auction.highestBidder, auction.highestBid);
 
         // Remove auction
         delete auctions[tokenId];
-
-        emit AuctionEnded(tokenId, auction.highestBidder, auction.highestBid);
     }
 
     function cancelAuction(uint256 tokenId) external onlyTokenOwner(tokenId) isAuctionActive(tokenId) {
@@ -187,10 +197,6 @@ contract TradingContract {
         delete auctions[tokenId];
 
         emit NFTDelisted(tokenId, msg.sender);
-    }
-
-    function getAuctionDetails(uint256 tokenId) external view returns (Auction memory) {
-        return auctions[tokenId];
     }
 
     function makeOffer(uint256 tokenId, uint256 expiration) external payable {
@@ -260,5 +266,9 @@ contract TradingContract {
             result[i] = offers[tokenId][addrs[i]];
         }
         return result;
+    }
+
+    function hasPendingReturns(uint256 tokenId, address user) external view returns (bool) {
+        return pendingReturns[tokenId][user] > 0;
     }
 }

@@ -16,16 +16,25 @@ if (saleEndElem && hoursElem && minutesElem && secondsElem) {
     return `${d}.${m}.${y}, ${t}${ap ? ' ' + ap : ''}`;
   });
 
+  let timerWasRunning = false;
+
   function updateCountdown() {
     const now = new Date();
     const diff = saleEnd - now;
     
     if (diff <= 0) {
+      if (timerWasRunning) {
+        timerWasRunning = false;
+        location.reload();
+      }
+
       hoursElem.textContent = "00";
       minutesElem.textContent = "00";
       secondsElem.textContent = "00";
       return;
     }
+
+    timerWasRunning = true;
 
     const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
     const minutes = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, '0');

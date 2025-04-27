@@ -11,6 +11,31 @@ export default function index(DB, tradingContract, signer) {
         res.send({ status: "ok" });
     });
 
+    MainRouter.route("/history/token/:tokenId/bidsOnCurrentAuction")
+    .get(async (req, res) => {
+        const tokenId = req.params.tokenId;
+        const page = parseInt(req.query.page) || 0;
+        const limit = 100;
+        const skip = page * limit;
+
+        const auctionData = await tradingContract.connect(signer).auctions(tokenId);
+        const auctionStartTime = Number(auctionData.startTimestamp.toString());
+
+        // Convert auctionStartTime (seconds) to a JS Date
+        const auctionStartDate = new Date(auctionStartTime * 1000);
+
+        const history = await DB.transactions.find({ 
+            tokenId, 
+            eventType: "NewBid",
+            timestamp: { $gte: auctionStartDate } // Now comparing Date to Date!
+        })
+        .sort({ timestamp: -1 })
+        .skip(skip)
+        .limit(limit);
+
+        res.json(history);
+    });
+
     MainRouter.route("/history/token/:tokenId")
     .get(async (req, res) => {
         const tokenId = req.params.tokenId;

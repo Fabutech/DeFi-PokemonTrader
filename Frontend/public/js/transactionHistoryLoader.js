@@ -47,10 +47,16 @@ async function loadTokenOffers(isOwner) {
     const offers = data.offers;
     const currentPrice =  parseFloat(Web3.utils.fromWei(data.currentPrice.toString(), "ether")); // Assuming ETH price string
 
-    console.log(offers);
-    console.log(currentPrice);
-
     const offersTable = document.getElementById('offers-table');
+    const offersContainer = document.getElementById('offers-container');
+
+    if (!offersContainer) return;
+
+    if (offers.length === 0) {
+      offersContainer.style.display = "none";
+    } else {
+      offersContainer.style.display = "flex";
+    }
 
     offers.forEach(offer => {
       const offerPrice = parseFloat(Web3.utils.fromWei(offer[1].toString(), "ether"));
@@ -91,6 +97,44 @@ async function loadTokenOffers(isOwner) {
   }
 }
 
+async function loadAuctionHistory(isOnAuction, startingPrice) {
+  if (isOnAuction == "false") return;
+
+  try {
+    const response = await fetch(`/api/history/token/${tokenId}/bidsOnCurrentAuction/?page=0`);
+    const transactions = await response.json();
+
+    const auctionHistoryTable = document.getElementById('auction-history-table');
+
+    transactions.forEach(tx => {
+      const date = new Date(tx.timestamp).toLocaleString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).replace(/(\d{2})[\/.-](\d{2})[\/.-](\d{4}),? ?(\d{2}:\d{2}) ?(AM|PM)?/, (match, d, m, y, t, ap) => {
+        return `${d}.${m}.${y}, ${t}${ap ? ' ' + ap : ''}`;
+      })
+
+      const diff = (((tx.price - Number(startingPrice)) / Number(startingPrice)) * 100).toFixed(1);
+      const diffLabel = `${Math.abs(diff)}% ${diff < 0 ? "below" : "above"}`;
+
+      const card = document.createElement('div');
+      card.className = 'long-card';
+      card.innerHTML = `
+        <div class="testing">${tx.price + ' ETH'}</div>
+        <div class="testing">${diffLabel}</div>
+        <div class="testing">${tx.from ? truncateAddress(tx.from) : '-'}</div>
+        <div class="testing">${date}</div>
+      `;
+      auctionHistoryTable.appendChild(card);
+    });
+  } catch (err) {
+    console.error("Failed to load transaction history", err);
+  }
+}
+
 function truncateAddress(addr) {
-return addr.slice(0, 6) + '...' + addr.slice(-4);
+  return addr.slice(0, 6) + '...' + addr.slice(-4);
 }
