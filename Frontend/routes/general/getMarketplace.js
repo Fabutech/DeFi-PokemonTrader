@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import { TextDecoder } from 'util';
 import { unixfs } from "@helia/unixfs";
 
@@ -25,14 +26,16 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
         
                 const metadata = JSON.parse(content);
 
+                const priceETH = ethers.formatEther(listing.price.toString());
                 const ethUsdRaw = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
                 const ethUsdJson = await ethUsdRaw.json();
                 const ethUsd = ethUsdJson.ethereum.usd;
-                const nftPriceUSD = Number(listing.price) * ethUsd;
+                const nftPriceUSD = priceETH * ethUsd;
         
                 return {
                     tokenId: nft.tokenId,
                     listing: listing,
+                    priceETH: priceETH,
                     priceUSD: nftPriceUSD,
                     metadata: metadata
                 };

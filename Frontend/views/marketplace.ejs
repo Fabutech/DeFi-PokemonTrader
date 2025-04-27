@@ -38,11 +38,11 @@
                                     <div class="nft-details">
                                         <h2 class="nft-name"><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %></h2>
                                         <div class="nft-row">
-                                            <div class="nft-row-full"><strong>Price:</strong> <%= nft.listing ? (nft.listing.price + " ETH") : "Not listed" %></div>
+                                            <div class="nft-row-full"><strong>Price:</strong> <%= nft.listing ? (nft.priceETH + " ETH") : "Not listed" %></div>
                                         </div>
                                         <div class="nft-row">
                                             <% if (nft.priceUSD) { %>
-                                                <div class="nft-row-full"><strong>USD:</strong> <span>~$<%= nft.priceUSD.toFixed(2) %></span></div>
+                                                <div class="nft-row-full"><strong>USD:</strong> <span>$<%= nft.priceUSD.toFixed(2) %></span></div>
                                             <% } %>
                                         </div>
                                         <% if (nft.listing && nft.listing.expiration) { %>
