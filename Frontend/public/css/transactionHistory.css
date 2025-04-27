@@ -1,4 +1,3 @@
-
   /* Full-page scrollable container */
   .scrollable-container {
     height: 100vh;
@@ -13,7 +12,6 @@
   .vertical-stack {
     display: flex;
     flex-direction: column;
-    gap: 40px; /* adds space between detail and transactions */
   }
   
   /* Optional: make the transaction cards scrollable if needed */
@@ -40,6 +38,7 @@
   .activity-container {
     background: #fff;
     border-radius: 12px;
+    border: 1px solid #e0e0e0;
     padding: 24px 28px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     margin-top: 20px;
@@ -132,4 +131,33 @@
     text-align: left;
     color: #707070;
     font-weight: 600;
+  }
+
+  /* DARKMODE for Transaction History */
+
+  body.dark .activity-container,
+  body.dark .long-card,
+  body.dark .activity-filter-input {
+    background-color: #242526;
+    border: none;
+    color: #f0f0f0;
+  }
+
+  body.dark .activity-header h2,
+  body.dark .activity-table-header,
+  body.dark .activity-col,
+  body.dark .testing {
+    color: #ccc;
+  }
+
+  body.dark .activity-body .activity-row:hover {
+    background-color: #3a3b3c;
+  }
+
+  body.dark .activity-table-header {
+    border-bottom: 1px solid #555;
+  }
+
+  body.dark .activity-body .activity-row {
+    border-bottom: 1px solid #555;
   }

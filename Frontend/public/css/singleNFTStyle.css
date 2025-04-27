@@ -1,8 +1,12 @@
 .nft-detail-wrapper {
     display: flex;
     flex-wrap: wrap;
-    padding: 40px; 
+    padding: 40px 40px 20px; 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .transactions-section-container {
+    margin: 0px 10px 30px;
   }
   
   .nft-detail-left {
@@ -311,3 +315,39 @@
     opacity: 0.85;
     transition: all 0.2s ease;
   }
+
+/* Single NFT Cards Darkmode */
+
+body.dark .nft-sale-price-box,
+body.dark .nft-card,
+body.dark .nft-sale-section,
+body.dark .nft-price-section,
+body.dark .auction-price-container,
+body.dark .nft-sale-actions,
+body.dark .popup-content {
+  background-color: #242526;
+  color: #f0f0f0;
+  border: none;
+}
+
+body.dark .nft-sale-header,
+body.dark .nft-price-label,
+body.dark .nft-price-value span,
+body.dark .usd-price,
+body.dark .time-label {
+  color: #ccc;
+}
+
+body.dark .divider-line {
+  background-color: #555;
+}
+
+body.dark .popup-field label,
+body.dark .popup-field input {
+  color: #f0f0f0;
+}
+
+body.dark .popup-field input {
+  background-color: #3a3b3c;
+  border: 1px solid #555;
+}
