@@ -66,7 +66,7 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         isForSale: listing != null
     }
 
-    res.render("nft", {
+    res.render("singleNft/nft", {
         nft: nft, 
         isOwner: isOwner,
         hasActiveOffer: hasActiveOffer,

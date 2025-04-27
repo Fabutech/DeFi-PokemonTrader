@@ -4,23 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %> | Poke Trader</title>
-  <link rel="icon" type="image/doge-icon" href="../images/favicon-96x96.ico">
+  <link rel="icon" type="image/doge-icon" href="../../images/favicon-96x96.ico">
 
   <!-- Style sheets -->
-  <link rel="stylesheet" href="../css/styles.css">
-  <link rel="stylesheet" href="../css/nftCardEffects.css">
-  <link rel="stylesheet" href="../css/singleNFTStyle.css">
-  <link rel="stylesheet" href="../css/transactionHistory.css">
+  <link rel="stylesheet" href="../../css/styles.css">
+  <link rel="stylesheet" href="../../css/nftCardEffects.css">
+  <link rel="stylesheet" href="../../css/singleNFTStyle.css">
+  <link rel="stylesheet" href="../../css/transactionHistory.css">
 
-  <script src="../js/transactionHistoryLoader.js"></script>
-  <script src="../js/web3-utils.js"></script>
+  <script src="../../js/transactionHistoryLoader.js"></script>
+  <script src="../../js/web3-utils.js"></script>
 
   <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
 
   <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
 </head>
 <body>
-  <%- include("partials/navbar") -%>
+  <%- include("../partials/navbar") -%>
   <div class="scrollable-container main-container">
     <div class="vertical-stack col">
       <section class="row nft-detail-wrapper">
@@ -150,86 +150,16 @@
 </div> <!-- close scrollable-container -->
 
   <!-- Status Popup -->
-  <div id="status-popup" class="approval-popup" style="display: none;">
-    <div class="popup-content" style="position: relative;">
-      <div id="status"></div>
-    </div>
-  </div>
+  <%- include("../partials/statusPopup") -%>
 
   <!-- Approval Popup -->
-  <div id="approval-popup" class="approval-popup" style="display: none;">
-    <div class="popup-content" style="position: relative;">
-      <span id="close-approval-popup" style="position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px;">&times;</span>
-      <h2>Approval Needed</h2>
-      <p>To list your Pokémon NFT, you must first approve the trading contract to manage your NFT.</p>
-      <p>You can choose to approve just this NFT or all your NFTs.</p>
-      <div class="popup-buttons">
-        <button id="approve-single" class="blue-btn">Approve This NFT</button>
-        <button id="approve-all" class="white-btn">Approve All NFTs</button>
-      </div>
-      <div id="approval-status"></div>
-    </div>
-  </div>
+  <%- include("popups/approvalPopup") -%>
 
   <!-- Listing Popup -->
-  <div id="listing-popup" class="approval-popup" style="display: none;">
-    <div class="popup-content" style="position: relative;">
-      <span id="close-listing-popup" style="position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px;">&times;</span>
-      <h2>List Your Pokémon NFT</h2>
-      <p>Set your desired price and the duration of the sale.</p>
-      
-      <div class="popup-field">
-        <label for="listing-price"><strong>Price (ETH):</strong></label>
-        <input type="number" id="listing-price" placeholder="e.g. 0.5" min="0" step="0.01" />
-      </div>
-
-      <div class="popup-field">
-        <label for="listing-date"><strong>Expiration Date:</strong></label>
-        <input type="date" id="listing-date" />
-      </div>
-
-      <div class="popup-field">
-        <label for="listing-time"><strong>Expiration Time:</strong></label>
-        <input type="time" id="listing-time" />
-      </div>
-
-      <div class="popup-buttons" style="margin-top: 15px;">
-        <button id="confirm-listing" class="blue-btn">List NFT</button>
-      </div>
-
-      <div id="listing-status" style="margin-top: 10px; font-weight: bold;"></div>
-    </div>
-  </div>
+  <%- include("popups/listingPopup") -%>
 
   <!-- Offer Popup -->
-  <div id="offer-popup" class="approval-popup" style="display: none;">
-    <div class="popup-content" style="position: relative;">
-      <span id="close-offer-popup" style="position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px;">&times;</span>
-      <h2>Make an Offer</h2>
-      <p>Set your offer amount and the expiration date and time.</p>
-      
-      <div class="popup-field">
-        <label for="offer-amount"><strong>Offer Amount (ETH):</strong></label>
-        <input type="number" id="offer-amount" placeholder="e.g. 0.5" min="0" step="0.01" />
-      </div>
-
-      <div class="popup-field">
-        <label for="offer-date"><strong>Expiration Date:</strong></label>
-        <input type="date" id="offer-date" />
-      </div>
-
-      <div class="popup-field">
-        <label for="offer-time"><strong>Expiration Time:</strong></label>
-        <input type="time" id="offer-time" />
-      </div>
-
-      <div class="popup-buttons" style="margin-top: 15px;">
-        <button id="submit-offer" class="blue-btn">Submit Offer</button>
-      </div>
-
-      <div id="offer-status" style="margin-top: 10px; font-weight: bold;"></div>
-    </div>
-  </div>
+  <%- include("popups/offerPopup") -%>
 
   <!-- Scripts -->
   <script>
@@ -266,8 +196,8 @@
     }
   </script>
 
-  <script src="../js/singleNFTTimer.js"></script>
-  <script src="../js/nftCardEffects.js"></script>
-  <script src="../js/navbar.js"></script>
+  <script src="../../js/singleNFTTimer.js"></script>
+  <script src="../../js/nftCardEffects.js"></script>
+  <script src="../../js/navbar.js"></script>
 </body>
 </html>

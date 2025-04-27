@@ -1,0 +1,28 @@
+<div id="listing-popup" class="approval-popup" style="display: none;">
+    <div class="popup-content" style="position: relative;">
+      <span id="close-listing-popup" style="position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px;">&times;</span>
+      <h2>List Your Pokémon NFT</h2>
+      <p>Set your desired price and the duration of the sale.</p>
+      
+      <div class="popup-field">
+        <label for="listing-price"><strong>Price (ETH):</strong></label>
+        <input type="number" id="listing-price" placeholder="e.g. 0.5" min="0" step="0.01" />
+      </div>
+
+      <div class="popup-field">
+        <label for="listing-date"><strong>Expiration Date:</strong></label>
+        <input type="date" id="listing-date" />
+      </div>
+
+      <div class="popup-field">
+        <label for="listing-time"><strong>Expiration Time:</strong></label>
+        <input type="time" id="listing-time" />
+      </div>
+
+      <div class="popup-buttons" style="margin-top: 15px;">
+        <button id="confirm-listing" class="blue-btn">List NFT</button>
+      </div>
+
+      <div id="listing-status" style="margin-top: 10px; font-weight: bold;"></div>
+    </div>
+</div>
