@@ -14,6 +14,7 @@
     --sidebar-color: #FFF;
     --primary-color: #695CFE;
     --primary-color-light: #F6F5FF;
+    --primary-color-dark: #574fd6;
     --toggle-color: #DDD;
     --text-color: #707070;
     --text-muted-color: #7f8c8d;
@@ -60,6 +61,8 @@ body.dark{
     --sidebar-color: #242526;
     --primary-color: #3a3b3c;
     --primary-color-light: #3a3b3c;
+    --primary-color-dark: #2a2b2c;
     --toggle-color: #fff;
     --text-color: #ccc;
+    --text-muted-color: #999;
 }

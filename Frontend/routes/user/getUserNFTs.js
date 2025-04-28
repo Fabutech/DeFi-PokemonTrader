@@ -5,7 +5,7 @@ export default async function getUserNFTs(req, res, DB, nftContract, signer, hel
     const userAddress = req.session.walletAddress;
 
     if (!userAddress) {
-        return res.redirect("/");
+        return res.render("connect");
     }
 
     const decoder = new TextDecoder();

@@ -4,6 +4,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     const connectText = document.getElementById('connectWallet-text');
     const connectIcon = document.getElementById('connectWallet-icon');
 
+    const secondaryConnectBtn = document.getElementById('connectWallet-btn-2');
+
     const updateUI = (account) => {
         if (account) {
             connectText.innerText = `Connected`;
@@ -47,7 +49,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             body: JSON.stringify({ address: currentAccount?.toLowerCase() || null })
         });
 
-        connectBtn.onclick = async () => {
+        const handleConnectOnClick = async () => {
             try {
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
         
@@ -74,7 +76,13 @@ window.addEventListener('DOMContentLoaded', async () => {
                     alert("MetaMask is locked. Please unlock it and try again.");
                 }
             }
-        };
+        }
+
+        connectBtn.onclick = handleConnectOnClick;
+
+        if (secondaryConnectBtn) {
+            secondaryConnectBtn.onclick = handleConnectOnClick;
+        }
 
         window.ethereum.on('accountsChanged', (accounts) => {
             currentAccount = accounts[0] || null;
