@@ -1,6 +1,21 @@
 <div class="activity-container">
-    <div class="activity-header">
-      <h2>NFT Activity</h2>
+    <div class="activity-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <% if (type === "single") { %>
+        <h2>NFT Activity</h2>
+      <% } else if (type === "address") { %>
+        <h2>Your Activity</h2>
+      <% } else { %>
+        <h2>All Transactions on Chain</h2>
+      <% } %>
+      <div class="pagination-controls" style="display: flex; gap: 10px; align-items: center;">
+        <button id="prevPageBtn" class="pagination-btn">
+          <i class='bx bx-chevron-left'></i>
+        </button>
+        <span id="currentPageDisplay">0</span>
+        <button id="nextPageBtn" class="pagination-btn">
+          <i class='bx bx-chevron-right'></i>
+        </button>
+      </div>
     </div>
 
     <div class="activity-table">
@@ -16,3 +31,53 @@
       </div>
     </div>
 </div>
+<script>
+  let currentPage = 0;
+
+  function updatePaginationControls() {
+    document.getElementById('currentPageDisplay').innerText = currentPage;
+    document.getElementById('prevPageBtn').disabled = currentPage === 0;
+  }
+
+  document.getElementById('prevPageBtn').addEventListener('click', function() {
+    if (currentPage > 0) {
+      currentPage--;
+      loadTransactionHistory("<%= type %>", currentPage);
+      updatePaginationControls();
+    }
+  });
+
+  document.getElementById('nextPageBtn').addEventListener('click', function() {
+    currentPage++;
+    loadTransactionHistory("<%= type %>", currentPage);
+    updatePaginationControls();
+  });
+
+  updatePaginationControls();
+</script>
+<style>
+  .pagination-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: black;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  body.dark .pagination-btn {
+    color: white;
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  #currentPageDisplay {
+    font-size: 1.3rem;
+  }
+</style>

@@ -15,5 +15,10 @@ export default function index(DB, tradingContract, nftContract, signer, helia) {
         getMarketplace(req, res, DB, tradingContract, nftContract, signer, helia)
     })
 
+    MainRouter.route("/transactions")
+    .get((req, res) => {
+        res.render("transactions");
+    })
+
     return MainRouter
 }

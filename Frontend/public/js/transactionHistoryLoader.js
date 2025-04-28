@@ -6,11 +6,16 @@ async function loadTransactionHistory(type, page="0") {
         response = await fetch(`/api/history/token/${tokenId}?page=${page}`);
       } else if (type === "address") {
         response = await fetch(`/api/history/address/${userAddress}?page=${page}`);
+      } else if (type === "all") {
+        response = await fetch(`/api/history?page=${page}`);
+      } else {
+        return;
       }
 
       const transactions = await response.json();
 
       const historyContainer = document.getElementById('transaction-history');
+      historyContainer.innerHTML = "";
 
       transactions.forEach(tx => {
         const date = new Date(tx.timestamp).toLocaleString(undefined, {
@@ -51,6 +56,8 @@ async function loadTokenOffers(isOwner) {
     const offersContainer = document.getElementById('offers-container');
 
     if (!offersContainer) return;
+
+    offersTable.innerHTML = "";
 
     if (offers.length === 0) {
       offersContainer.style.display = "none";
@@ -105,6 +112,7 @@ async function loadAuctionHistory(isOnAuction, startingPrice) {
     const transactions = await response.json();
 
     const auctionHistoryTable = document.getElementById('auction-history-table');
+    auctionHistoryTable.innerHTML = "";
 
     transactions.forEach(tx => {
       const date = new Date(tx.timestamp).toLocaleString(undefined, {
