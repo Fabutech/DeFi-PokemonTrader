@@ -1,13 +1,36 @@
+.marketplace-section {
+    padding-bottom: 40px;
+}
+
 .nft-grid-wrapper {
-    padding: 2rem;
+    padding: 0px 40px 0px calc(60px - 1rem);
     display: flex;
     justify-content: center;
 }
 
 .nft-grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 1.5rem;
     width: 100%;
     max-width: 1400px;
+}
+
+.enhanced-card {
+    width: 320px !important;
+}
+
+/* Section Titles */
+.section-title {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--primary-color); /* Use your main theme color */
+    padding: 0px 60px 10px;
+}
+
+/* Informational Text */
+.info-text {
+    font-size: 20px;
+    color: var(--text-muted-color); /* A softer tone, like grey */
+    padding: 0px 60px;
 }

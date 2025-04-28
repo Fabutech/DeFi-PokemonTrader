@@ -25,53 +25,37 @@
         <div class="main-content-wrapper">
             <div class="text">Marketplace</div> <!--make it so it detects username?-->
 
-
-            <!-- ------------ -->
-            <!-- NFTs Grid Section -->
-            <div class="nft-grid-wrapper">
-                <div class="nft-grid-container">
-                    <% nfts.forEach(nft => { %>
-                        <a href="/nft/<%= nft.tokenId %>" class="nft-link" style="text-decoration: none;">
-                            <div class="nft-card enhanced-card">
-                                <div class="nft-img-wrapper">
-                                    <img src="<%= nft.metadata.image %>" alt="NFT Image">
-                                    <div class="nft-details">
-                                        <h2 class="nft-name"><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %></h2>
-                                        <div class="nft-row">
-                                            <div class="nft-row-full"><strong>Price:</strong> <%= nft.listing ? (nft.priceETH + " ETH") : "Not listed" %></div>
-                                        </div>
-                                        <div class="nft-row">
-                                            <% if (nft.priceUSD) { %>
-                                                <div class="nft-row-full"><strong>USD:</strong> <span>$<%= nft.priceUSD.toFixed(2) %></span></div>
-                                            <% } %>
-                                        </div>
-                                        <% if (nft.listing && nft.listing.expiration) { %>
-                                            <div class="nft-row countdown" data-expiration="<%= nft.listing.expiration %>">
-                                                <div class="nft-row-full"><strong>Expires in:</strong> <span class="time-remaining">Loading...</span></div>
-                                            </div>
-                                            <div class="nft-row nft-row-full expiration-date">
-                                                <div class="nft-row-full">
-                                                    <strong>End Date:</strong> <span class="end-date-text">
-                                                        <%= new Date(Number(nft.listing.expiration) * 1000).toLocaleString(undefined, {
-                                                            year: 'numeric',
-                                                            month: '2-digit',
-                                                            day: '2-digit',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                          }).replace(/(\d{2})[\/.-](\d{2})[\/.-](\d{4}),? ?(\d{2}:\d{2}) ?(AM|PM)?/, (match, d, m, y, t, ap) => {
-                                                            return `${d}.${m}.${y}, ${t}${ap ? ' ' + ap : ''}`;
-                                                          }); %>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        <% } %>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    <% }) %>
-                </div>
+            <div class="marketplace-section">
+                <h2 class="section-title">Listed NFTs</h2>
+                <% if (listings.length > 0) { %>
+                  <div class="nft-grid-wrapper">
+                      <div class="nft-grid-container">
+                          <% listings.forEach(nft => { %>
+                              <%- include("marketplaceCard", { nft: nft, isAuction: false }) -%>
+                          <% }) %>
+                      </div>
+                  </div>
+                <% } else { %>
+                  <div class="info-text">No NFTs are currently listed for sale.</div>
+                <% } %>
             </div>
+            
+            <div class="marketplace-section">
+                <h2 class="section-title">NFTs on Auction</h2>
+                <% if (auctions.length > 0) { %>
+                <div class="nft-grid-wrapper">
+                    <div class="nft-grid-container">
+                        <% auctions.forEach(nft => { %>
+                            <%- include("marketplaceCard", { nft: nft, isAuction: true }) -%>
+                        <% }) %>
+                    </div>
+                </div>
+                <% } else { %>
+                <div class="info-text">No NFTs are currently on auction.</div>
+                <% } %>
+            </div>
+        </div>
+    </section>
 
     <!--JavaScript-->
     <script src="../js/navbar.js"></script>

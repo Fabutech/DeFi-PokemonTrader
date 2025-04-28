@@ -12,7 +12,8 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
         allNFTs.map(async nft => {
             try {
                 let listing = await tradingContract.connect(signer).listings(nft.tokenId);
-                if (!listing.isActive) {
+
+                if (listing.isActive === false) {
                     return null;
                 }
         
@@ -21,20 +22,79 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
         
                 let content = '';
                 for await (const chunk of fs.cat(ipfsHash)) {
-                content += decoder.decode(chunk);
+                    content += decoder.decode(chunk);
                 }
         
                 const metadata = JSON.parse(content);
 
-                const priceETH = ethers.formatEther(listing.price.toString());
-                const ethUsdRaw = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
-                const ethUsdJson = await ethUsdRaw.json();
-                const ethUsd = ethUsdJson.ethereum.usd;
-                const nftPriceUSD = priceETH * ethUsd;
+                let priceETH = ethers.formatEther(listing.price.toString());
+                let nftPriceUSD = "-";
+                try {
+                    const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+                    const data = await response.json();
+                    const ethUsd = data.ethereum.usd;
+        
+                    nftPriceUSD = priceETH * ethUsd;
+                } catch (e) {
+                    console.log("Error while fetching eth to usd exchange rate: " + e);
+                }
+
+                return {
+                    tokenId: nft.tokenId,
+                    expiry: listing.expiration,
+                    priceETH: priceETH,
+                    priceUSD: nftPriceUSD,
+                    metadata: metadata
+                };
+            } catch (err) {
+                console.error(`Error fetching metadata for token ${nft.tokenId}:`, err);
+                return null;
+            }
+        })
+    );
+
+    const nftsOnAuction = await Promise.all(
+        allNFTs.map(async nft => {
+            try {
+                let auction = await tradingContract.connect(signer).auctions(nft.tokenId);
+
+                if (auction.isActive === false) {
+                    return null;
+                }
+        
+                const tokenUri = await nftContract.connect(signer).tokenURI(nft.tokenId);
+                const ipfsHash = tokenUri.replace("ipfs://", "");
+        
+                let content = '';
+                for await (const chunk of fs.cat(ipfsHash)) {
+                    content += decoder.decode(chunk);
+                }
+        
+                const metadata = JSON.parse(content);
+
+                let priceETH;
+                // If the auction has bids take the highestBid value, otherwise take the starting price of the auction
+                if (auction.highestBid.toString() != 0) {
+                    priceETH = ethers.formatEther(auction.highestBid.toString());
+                } else {
+                    priceETH = ethers.formatEther(auction.startingPrice.toString());
+                }
+
+                let nftPriceUSD = 0;
+                try {
+                    const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+                    const data = await response.json();
+                    const ethUsd = data.ethereum.usd;
+        
+                    nftPriceUSD = priceETH * ethUsd;
+                } catch (e) {
+                    console.log("Error while fetching eth to usd exchange rate: " + e);
+                }
+
         
                 return {
                     tokenId: nft.tokenId,
-                    listing: listing,
+                    expiry: auction.endTimestamp,
                     priceETH: priceETH,
                     priceUSD: nftPriceUSD,
                     metadata: metadata
@@ -47,7 +107,11 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
     );
     
     // Remove nulls (non-active or errored NFTs)
-    const filteredNfts = listedNfts.filter(nft => nft !== null);
+    const filteredListings = listedNfts.filter(nft => nft !== null);
+    const filteredAuctions = nftsOnAuction.filter(nft => nft !== null);
     
-    res.render("marketplace", { nfts: filteredNfts });
+    res.render("marketplace", { 
+        listings: filteredListings, 
+        auctions: filteredAuctions 
+    });
 }
