@@ -25,22 +25,24 @@
 
     <section class="main-container home">
         <div class="main-content-wrapper">
-            <div class="text">My NFT's</div> <!--make it so it detects username?-->
+            <div class="text">My NFT's</div>
 
     <!-- ---------------- -->
     <!-- Overview Section -->
             <div class="balance">
                 <div class="balance-card">
                     <div class="balance-header">Currently for Sale</div>
-                    <div>0</div> <!--Available Balance-->
+                    <div><%= currentlyForSale %></div>
                 </div>
                 <div class="balance-card middle">
                     <div class="balance-header">Owned NFTs</div>
-                    <div><%= nfts.length %></div> <!--Dollar value of all Cryptos + Available Balance-->
+                    <div><%= nfts.length %></div>
                 </div>
                 <div class="balance-card">
                     <div class="balance-header">Total Value</div>
-                    <div><%= nfts.length %>$</div> <!--Dollar value of all owned Cryptos added-->
+                    <div>
+                        <%= parseFloat(totalValueETH.toFixed(4)).toString() %> ETH ($<%= parseFloat(totalValueUSD.toFixed(2)).toString() %>)
+                    </div>
                 </div>
             </div>
 

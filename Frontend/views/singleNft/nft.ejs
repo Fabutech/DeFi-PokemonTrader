@@ -127,7 +127,7 @@
                 <% } %>
                 <% if (!isOwner) { %>
                   <% if (nft.isListed) { %>
-                    <button id="buy-btn" class="blue-btn half-width" data-price="<%= nft.listing.price %>">Buy now</button>
+                    <button id="buy-btn" class="blue-btn half-width" data-price="<%= nft.priceETH %>">Buy now</button>
                   <% } else if (nft.isOnAuction && !nft.auction.hasEnded) { %>
                     <button id="place-bid-btn" class="blue-btn half-width">Place Bid</button>
                   <% } %>

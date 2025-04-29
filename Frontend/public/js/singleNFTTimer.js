@@ -28,6 +28,7 @@ if (saleEndElem && hoursElem && minutesElem && secondsElem) {
     if (diff <= 0) {
       if (timerWasRunning) {
         timerWasRunning = false;
+        location.reload();
       }
 
       if (timerGridElem) timerGridElem.style.display = "none";

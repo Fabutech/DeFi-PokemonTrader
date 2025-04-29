@@ -82,5 +82,14 @@ document.addEventListener("DOMContentLoaded", () => {
     duplicates.forEach(card => {
       const clone = card.cloneNode(true);
       container.appendChild(clone);
+
+      // Pause/resume on hover
+      clone.addEventListener("mouseenter", () => {
+        targetSpeed = 0;
+      });
+  
+      clone.addEventListener("mouseleave", () => {
+        targetSpeed = 1.5;
+      });
     });
 });
