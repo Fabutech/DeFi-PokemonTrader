@@ -14,7 +14,7 @@ export default async function getNft(req, res, tradingContract, tradingContractA
     let hasActiveOffer = false;
     if (userAddress) {
         const offer = await tradingContract.connect(signer).offers(tokenId, userAddress);
-        hasActiveOffer = offer.amount > 0 && offer.expiration > Math.floor(Date.now() / 1000);
+        hasActiveOffer = offer.amount > 0;
     }
 
     let nftPriceUSD;

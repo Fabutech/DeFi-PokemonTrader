@@ -2,6 +2,9 @@ const saleEndElem = document.getElementById("saleEndDate");
 const hoursElem = document.getElementById("hours");
 const minutesElem = document.getElementById("minutes");
 const secondsElem = document.getElementById("seconds");
+const timerGridElem = document.querySelector(".nft-sale-timer-grid");
+const saleEndedMessageElem = document.getElementById("sale-ended-message");
+const buyBtn = document.getElementById("buy-btn");
 
 if (saleEndElem && hoursElem && minutesElem && secondsElem) {
   const saleEnd = new Date(parseInt(saleEndElem.textContent.trim()) * 1000);
@@ -25,12 +28,11 @@ if (saleEndElem && hoursElem && minutesElem && secondsElem) {
     if (diff <= 0) {
       if (timerWasRunning) {
         timerWasRunning = false;
-        location.reload();
       }
 
-      hoursElem.textContent = "00";
-      minutesElem.textContent = "00";
-      secondsElem.textContent = "00";
+      if (timerGridElem) timerGridElem.style.display = "none";
+      if (saleEndedMessageElem) saleEndedMessageElem.style.display = "flex";
+      if (buyBtn) buyBtn.style.display = "none";
       return;
     }
 

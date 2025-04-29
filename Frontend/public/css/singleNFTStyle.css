@@ -1,7 +1,7 @@
 .nft-detail-wrapper {
     display: flex;
     flex-wrap: wrap;
-    padding: 40px 40px 20px; 
+    padding: 40px 10px 20px 40px; 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
@@ -191,6 +191,14 @@
   color: grey;
 }
 
+#sale-ended-message {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: red;
+  margin-top: 10px;
+  text-align: center;
+}
+
 
 /* -------- */
 /* Auctions */
@@ -260,7 +268,6 @@
   font-size: 12px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   transition: background-color 0.2s ease;
 }
 

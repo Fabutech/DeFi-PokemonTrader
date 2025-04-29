@@ -111,16 +111,26 @@
     font-size: 13px;
   }
   
-  .long-card {
-    display: flex;
-    justify-content: space-between;
-    flex: 1;
-    margin: 8px 0px;
-    background-color: #FFF;
-    border-radius: 6px;
-    transition: var(--tran-05); /*soft transition*/
-    box-sizing: border-box;
-  }
+.long-card {
+  display: flex;
+  justify-content: space-between;
+  flex: 1;
+  margin: 8px 0px;
+  background-color: #FFF;
+  border-radius: 6px;
+  transition: var(--tran-05); /*soft transition*/
+  box-sizing: border-box;
+}
+
+/* Expired card appearance */
+.long-card.expired {
+  opacity: 0.2;
+}
+
+/* Dark mode for expired cards */
+body.dark .long-card.expired {
+  background-color: #3a3b3c;
+}
   
   .testing {
     display: flex;

@@ -69,6 +69,7 @@
                   <div><span id="minutes" class="time-part">00</span><div class="time-label">Minutes</div></div>
                   <div><span id="seconds" class="time-part">00</span><div class="time-label">Seconds</div></div>
                 </div>
+                <div id="sale-ended-message" style="display: none;">Sale Ended</div>
               </div>
               <div class="divider-line"></div>
               <div class="nft-price-section">
@@ -127,13 +128,13 @@
                 <% if (!isOwner) { %>
                   <% if (nft.isListed) { %>
                     <button id="buy-btn" class="blue-btn half-width" data-price="<%= nft.listing.price %>">Buy now</button>
-                    <% if (!hasActiveOffer) { %>
-                      <button id="offer-btn" class="white-btn half-width">Make offer</button>
-                    <% } else { %>
-                      <button id="withdraw-offer-btn" class="white-btn half-width">Withdraw offer</button>
-                    <% } %>
                   <% } else if (nft.isOnAuction && !nft.auction.hasEnded) { %>
                     <button id="place-bid-btn" class="blue-btn half-width">Place Bid</button>
+                  <% } %>
+                  <% if (!hasActiveOffer) { %>
+                    <button id="offer-btn" class="white-btn half-width">Make offer</button>
+                  <% } else { %>
+                    <button id="withdraw-offer-btn" class="white-btn half-width">Withdraw offer</button>
                   <% } %>
                 <% } else { %>
                   <% if (nft.isListed) { %>
@@ -149,9 +150,6 @@
             <% if (nft.isOnAuction) { %>
               <%- include("sections/auctionHistorySection") -%>
             <% } %>
-
-            <!-- Offers Section -->
-            <%- include("sections/offersSection") -%>
             
           <% } else if (isOwner) { %>
             <div class="nft-sale-actions">
@@ -165,7 +163,18 @@
                 <button id="withdraw-bid-btn" class="white-btn">Withdraw Bid</button>
               <% } %>
             </div>
+          <% } else { %>
+            <div class="nft-sale-actions">
+              <% if (!hasActiveOffer) { %>
+                <button id="offer-btn" class="blue-btn">Make offer</button>
+              <% } else { %>
+                <button id="withdraw-offer-btn" class="blue-btn">Withdraw offer</button>
+              <% } %>
+            </div>
           <% } %>
+
+          <!-- Offers Section -->
+          <%- include("sections/offersSection") -%>
         </div>
       </section>
 

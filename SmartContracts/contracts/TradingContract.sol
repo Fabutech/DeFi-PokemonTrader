@@ -108,6 +108,8 @@ contract TradingContract {
         // Remove listing
         delete listings[tokenId];
 
+        _clearOffers(tokenId);
+
         emit NFTSold(tokenId, listedNFT.seller, msg.sender, msg.value);
     }
 
@@ -178,6 +180,8 @@ contract TradingContract {
 
         // Pay finalizer reward
         payable(msg.sender).transfer(reward);
+
+        _clearOffers(tokenId);
 
         emit AuctionEnded(tokenId, auction.highestBidder, auction.highestBid);
 
@@ -254,6 +258,8 @@ contract TradingContract {
         // Remove listing
         delete listings[tokenId];
 
+        _clearOffers(tokenId);
+
         emit OfferAccepted(tokenId, offerer, offer.amount);
     }
 
@@ -270,5 +276,18 @@ contract TradingContract {
 
     function hasPendingReturns(uint256 tokenId, address user) external view returns (bool) {
         return pendingReturns[tokenId][user] > 0;
+    }
+
+    function _clearOffers(uint256 tokenId) internal {
+        address[] storage addrs = offerers[tokenId];
+        for (uint256 i = 0; i < addrs.length; i++) {
+            address offerer = addrs[i];
+            uint256 refundAmount = offers[tokenId][offerer].amount;
+            if (refundAmount > 0) {
+                delete offers[tokenId][offerer];
+                payable(offerer).transfer(refundAmount);
+            }
+        }
+        delete offerers[tokenId];
     }
 }

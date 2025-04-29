@@ -95,10 +95,25 @@ export default function index(DB, tradingContract, signer) {
 
         let filteredOffers = [];
         if (offers) {
-            filteredOffers = offers
-                .map(o => [...o]) // clone into plain arrays since original array is immutable
-                .filter(offer => offer[0] != 0n) // filter out zero address
-                .sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0)); // sort by offer price in descending order
+            const now = Math.floor(Date.now() / 1000);
+            const activeOffers = [];
+            const expiredOffers = [];
+
+            offers
+              .map(o => [...o]) // clone into plain arrays since original array is immutable
+              .filter(offer => offer[0] != 0n) // filter out zero address
+              .forEach(offer => {
+                if (Number(offer[2]) > now) {
+                  activeOffers.push(offer);
+                } else {
+                  expiredOffers.push(offer);
+                }
+              });
+
+            activeOffers.sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0)); // Sort active offers descending
+            expiredOffers.sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0)); // Sort expired offers descending (optional)
+
+            filteredOffers = activeOffers.concat(expiredOffers);
         }
           
         res.json(serializeBigInts({

@@ -62,40 +62,44 @@ async function loadTokenOffers(isOwner) {
     if (offers.length === 0) {
       offersContainer.style.display = "none";
     } else {
-      offersContainer.style.display = "flex";
+      offersContainer.style.display = "";
     }
 
     offers.forEach(offer => {
       const offerPrice = parseFloat(Web3.utils.fromWei(offer[1].toString(), "ether"));
-      const expirationDate = new Date(offer[2] * 1000).toLocaleString(undefined, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      }).replace(/(\d{2})[\/.-](\d{2})[\/.-](\d{4}),?/, (match, d, m, y) => {
-        return `${d}.${m}.${y}`;
-      });
+      const expiration = new Date(offer[2] * 1000);
+      const now = new Date();
+      let expirationDate;
+
+      if (expiration.toDateString() === now.toDateString()) {
+        expirationDate = expiration.toLocaleString(undefined, {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } else {
+        expirationDate = expiration.toLocaleString(undefined, {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/(\d{2})[\/.-](\d{2})[\/.-](\d{4}),?/, (match, d, m, y) => {
+          return `${d}.${m}.${y}`;
+        });
+      }
 
       const diff = currentPrice > 0 ? (((offerPrice - currentPrice) / currentPrice) * 100).toFixed(1) : "0";
-      const diffLabel = `${Math.abs(diff)}% ${diff < 0 ? "below" : "above"}`;
+      const diffLabel = currentPrice > 0 ? `${Math.abs(diff)}% ${diff < 0 ? "below" : "above"}` : "-";
+      const isExpired = expiration.getTime() < now.getTime();
 
       const card = document.createElement('div');
-      card.className = 'long-card';
-      if (isOwner === "true") {
-        card.innerHTML = `
-          <div class="testing">${offerPrice} ETH</div>
-          <div class="testing">${diffLabel}</div>
-          <div class="testing">${expirationDate}</div>
-          <div class="testing">${truncateAddress(offer[0])}</div>
-          <button class="accept-offer-btn" data="${offer[0]}"></button>
-        `;
-      } else {
-        card.innerHTML = `
-          <div class="testing">${offerPrice} ETH</div>
-          <div class="testing">${diffLabel}</div>
-          <div class="testing">${expirationDate}</div>
-          <div class="testing">${truncateAddress(offer[0])}</div>
-        `;
-      }
+      card.className = isExpired ? 'long-card expired' : 'long-card';
+
+      card.innerHTML = `
+        <div class="testing">${offerPrice} ETH</div>
+        <div class="testing">${diffLabel}</div>
+        <div class="testing">${expirationDate}</div>
+        <div class="testing">${truncateAddress(offer[0])}</div>
+        ${isOwner === "true" && !isExpired ? `<button class="accept-offer-btn" data="${offer[0]}"></button>` : ''}
+      `;
 
       offersTable.appendChild(card);
     });
