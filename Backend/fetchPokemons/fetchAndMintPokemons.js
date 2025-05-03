@@ -49,12 +49,18 @@ async function createHeliaNode() {
 }
 
 // Upload metadata & image to IPFS using Helia
-async function uploadToIPFS(helia, metadata) {
+async function uploadToIPFS(helia, content, isJsonContent) {
   const fs = unixfs(helia);
 
-  // Convert metadata to a string and upload to IPFS
-  const metadataCid = await fs.addBytes(fromString(JSON.stringify(metadata)));
-  return `ipfs://${metadataCid.toString()}`;
+  if (isJsonContent) {
+    // Upload JSON metadata as bytes
+    const cid = await fs.addBytes(fromString(JSON.stringify(content)));
+    return `ipfs://${cid.toString()}`;
+  } else {
+    // Upload JSON metadata as bytes
+    const cid = await fs.addBytes(content);
+    return cid.toString();
+  }
 }
   
 // Mint NFT on Ethereum (Hardhat local node)
@@ -109,29 +115,37 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
   const helia = await createHeliaNode();
 
   // Array which saves all ipfsURIs in order to backMint all NFTs at once
-  var ipfsURIs = [];
-
-  console.log(`${time()} Starting to upload NFT metadata to IPFS...`);
-  for (const pokemon of pokemons) {
+  const ipfsURIs = await Promise.all(pokemons.map(async (pokemon) => {
     let attributes = {};
     pokemon.stats.forEach((stat) => {
       attributes[stat.name] = stat.base_stat;
     });
 
-    const image = pokemon.sprites?.other?.["official-artwork"]?.front_default || pokemon.sprites?.front_default || "";
+    const imageUrl = pokemon.sprites?.other?.["official-artwork"]?.front_default || pokemon.sprites?.front_default || "";
+
+    // Fetch image from URL
+    const res = await fetch(imageUrl);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch image: ${res.statusText}`);
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    const imageCid = await uploadToIPFS(helia, bytes, false);
 
     const metadata = {
       name: pokemon.name,
       height: pokemon.height,
       weight: pokemon.weight,
       description: pokemon.types.join(", "),
-      image: image,
+      image: imageCid,
       attributes: attributes
     };
 
-    const ipfsURI = await uploadToIPFS(helia, metadata);
-    ipfsURIs.push(ipfsURI);  
-  }
+    const ipfsURI = await uploadToIPFS(helia, metadata, true);
+
+    return ipfsURI;
+  }));
   console.log(`${time()} ✅ Uploaded all NFT metadata to IPFS!`);
 
   // Batch-Minting all NFTS using the cids from helia IPFS as the NFT Uri

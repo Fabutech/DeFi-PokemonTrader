@@ -1,7 +1,10 @@
 import express from 'express';
+import { unixfs } from '@helia/unixfs';
 
-export default function index(DB, tradingContract, signer) {
+export default function index(DB, tradingContract, signer, helia) {
     const MainRouter = express.Router();
+
+    const fs = unixfs(helia);
 
     MainRouter.route("/connect")
     .post((req, res) => {
@@ -120,6 +123,28 @@ export default function index(DB, tradingContract, signer) {
             offers: filteredOffers,
             currentPrice: listing.price
         }));
+    });
+
+    MainRouter.route("/ipfs/:cid")
+    .get(async (req, res) => {
+        try {
+            const { cid } = req.params;
+        
+            const stream = fs.cat(cid); // returns an async iterable
+            const chunks = [];
+            for await (const chunk of stream) {
+              chunks.push(chunk);
+            }
+        
+            const buffer = Buffer.concat(chunks);
+        
+            // Optional: detect or assume content type
+            res.setHeader('Content-Type', 'image/jpeg'); // or detect from file
+            res.send(buffer);
+          } catch (err) {
+            console.error(err);
+            res.status(500).send('Failed to fetch image from IPFS');
+          }
     });
 
     return MainRouter

@@ -27,8 +27,7 @@
         <div class="nft-detail-left">
             <div class="nft-card enhanced-card">
                 <div class="nft-img-wrapper">
-                    <img src="<%= nft.metadata.image %>" alt="NFT Image">
-                    <div class="nft-details">
+                  <img src="http://localhost:3000/api/ipfs/<%= nft.metadata.image %>" alt="NFT Image" />                    <div class="nft-details">
                         <div class="nft-description"><strong>Type:</strong> <%= nft.metadata.description %></div>
                         <div class="nft-row">
                             <div><strong>Height:</strong> <%= nft.metadata.height %></div>
