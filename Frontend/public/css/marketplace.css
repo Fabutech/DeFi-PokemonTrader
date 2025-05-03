@@ -13,7 +13,6 @@
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 1.5rem;
     width: 100%;
-    max-width: 1400px;
 }
 
 .enhanced-card {
@@ -33,4 +32,211 @@
     font-size: 20px;
     color: var(--text-muted-color); /* A softer tone, like grey */
     padding: 0px 60px;
+}
+
+.marketplace-search-wrapper {
+    margin: 20px 0 40px 60px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+#marketplaceSearch {
+    width: 300px;
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    background-color: #f9f9f9;
+}
+
+#marketplaceSearch:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    background-color: #ffffff;
+}
+
+.nft-status {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-indicator {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+.status-indicator.listed {
+    background-color: green;
+}
+
+.status-indicator.auction {
+    background-color: blue;
+}
+
+.status-text {
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 0 0 3px rgba(255,255,255,0.7);
+}
+
+.status-text.listed {
+    color: green;
+}
+.status-text.auction {
+    color: blue;
+}
+
+body.dark .status-indicator.listed {
+    background-color: #00ff00;
+}
+  
+body.dark .status-indicator.auction {
+    background-color: #3399ff;
+}
+body.dark .status-text {
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.6);
+}
+body.dark .status-text.listed {
+    color: #7fff7f;
+}
+body.dark .status-text.auction {
+    color: #7fafff;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.6; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Ensure nft-card has position: relative for absolute positioning inside */
+.nft-card {
+    position: relative;
+}
+
+.marketplace-filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.active-filters {
+    display: flex;
+    gap: 8px;
+}
+
+.filter-tag {
+    background-color: #dfe7ff;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #a8c1f2;
+    font-size: 14px;
+    /* display: flex;
+    align-items: center; */
+}
+
+.filter-tag-close {
+    margin-left: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Popup styles */
+.popup {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.popup.hidden {
+  display: none;
+}
+
+.popup-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 450px;
+  text-align: center;
+}
+
+.popup-checkbox-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 20px;
+}
+
+.popup-checkbox-wrapper label {
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.popup-checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.popup-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.popup-buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.popup-buttons .blue-btn,
+.popup-buttons .white-btn {
+  flex: 1;
+  margin: 0 5px;
+}
+
+.blue-btn,
+.white-btn {
+  padding: 12px 24px;
+  font-size: 1em;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.blue-btn {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.blue-btn:hover {
+  background-color: #2563eb;
+}
+
+.white-btn {
+  background-color: #f3f4f6;
+  color: #111;
+}
+
+.white-btn:hover {
+  background-color: #e5e7eb;
 }

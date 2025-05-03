@@ -8,110 +8,110 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
 
     const allNFTs = await DB.ownership.find({});
 
-    const listedNfts = await Promise.all(
-        allNFTs.map(async nft => {
-            try {
-                let listing = await tradingContract.connect(signer).listings(nft.tokenId);
+    const listedNfts = [];
+    const nftsOnAuction = [];
+    const unlistedNfts = [];
 
-                if (listing.isActive === false) {
-                    return null;
-                }
-        
-                const tokenUri = await nftContract.connect(signer).tokenURI(nft.tokenId);
-                const ipfsHash = tokenUri.replace("ipfs://", "");
-        
-                let content = '';
-                for await (const chunk of fs.cat(ipfsHash)) {
-                    content += decoder.decode(chunk);
-                }
-        
-                const metadata = JSON.parse(content);
+    const ethUsd = await fetchEthPrice();
 
+    await Promise.all(allNFTs.map(async nft => {
+        try {
+            const [listing, auction, offers, tokenUri] = await Promise.all([
+                tradingContract.connect(signer).listings(nft.tokenId),
+                tradingContract.connect(signer).auctions(nft.tokenId),
+                tradingContract.connect(signer).getOffers(nft.tokenId),
+                nftContract.connect(signer).tokenURI(nft.tokenId)
+            ]);
+            const ipfsHash = tokenUri.replace("ipfs://", "");
+
+            let content = '';
+            for await (const chunk of fs.cat(ipfsHash)) {
+                content += decoder.decode(chunk);
+            }
+
+            const metadata = JSON.parse(content);
+
+            let hasOffers = false;
+            let highestOfferPrice = "-";
+            if (offers) {
+                const now = Math.floor(Date.now() / 1000);
+                const activeOffers = [];
+    
+                offers
+                  .map(o => [...o]) // clone into plain arrays since original array is immutable
+                  .filter(offer => offer[0] != 0n) // filter out zero address
+                  .forEach(offer => {
+                    if (Number(offer[2]) > now) {
+                      activeOffers.push(offer);
+                    } 
+                  });
+    
+                activeOffers.sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0)); // Sort active offers descending
+    
+                hasOffers = activeOffers.length != 0;
+                if (hasOffers) {
+                    highestOfferPrice = Number(ethers.formatEther(activeOffers[0][1].toString()));
+                }
+            }
+
+
+            if (listing.isActive) {
                 let priceETH = ethers.formatEther(listing.price.toString());
-                let nftPriceUSD = "-";
-                try {
-                    const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
-                    const data = await response.json();
-                    const ethUsd = data.ethereum.usd;
-        
-                    nftPriceUSD = priceETH * ethUsd;
-                } catch (e) {
-                    console.log("Error while fetching eth to usd exchange rate: " + e);
-                }
+                let priceUSD = ethUsd ? priceETH * ethUsd : "-";
 
-                return {
+                listedNfts.push({
                     tokenId: nft.tokenId,
                     expiry: listing.expiration,
                     priceETH: priceETH,
-                    priceUSD: nftPriceUSD,
+                    priceUSD: priceUSD,
+                    hasOffers: hasOffers,
                     metadata: metadata
-                };
-            } catch (err) {
-                console.error(`Error fetching metadata for token ${nft.tokenId}:`, err);
-                return null;
-            }
-        })
-    );
+                });
+            } else if (auction.isActive) {
+                let priceETH = auction.highestBid.toString() !== "0"
+                    ? ethers.formatEther(auction.highestBid.toString())
+                    : ethers.formatEther(auction.startingPrice.toString());
+                let priceUSD = ethUsd ? priceETH * ethUsd : 0;
 
-    const nftsOnAuction = await Promise.all(
-        allNFTs.map(async nft => {
-            try {
-                let auction = await tradingContract.connect(signer).auctions(nft.tokenId);
-
-                if (auction.isActive === false) {
-                    return null;
-                }
-        
-                const tokenUri = await nftContract.connect(signer).tokenURI(nft.tokenId);
-                const ipfsHash = tokenUri.replace("ipfs://", "");
-        
-                let content = '';
-                for await (const chunk of fs.cat(ipfsHash)) {
-                    content += decoder.decode(chunk);
-                }
-        
-                const metadata = JSON.parse(content);
-
-                let priceETH;
-                // If the auction has bids take the highestBid value, otherwise take the starting price of the auction
-                if (auction.highestBid.toString() != 0) {
-                    priceETH = ethers.formatEther(auction.highestBid.toString());
-                } else {
-                    priceETH = ethers.formatEther(auction.startingPrice.toString());
-                }
-
-                let nftPriceUSD = 0;
-                try {
-                    const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
-                    const data = await response.json();
-                    const ethUsd = data.ethereum.usd;
-        
-                    nftPriceUSD = priceETH * ethUsd;
-                } catch (e) {
-                    console.log("Error while fetching eth to usd exchange rate: " + e);
-                }
-
-        
-                return {
+                nftsOnAuction.push({
                     tokenId: nft.tokenId,
                     expiry: auction.endTimestamp,
                     priceETH: priceETH,
-                    priceUSD: nftPriceUSD,
+                    priceUSD: priceUSD,
+                    hasOffers: hasOffers,
                     metadata: metadata
-                };
-            } catch (err) {
-                console.error(`Error fetching metadata for token ${nft.tokenId}:`, err);
-                return null;
+                });
+            } else {
+                unlistedNfts.push({
+                    tokenId: nft.tokenId,
+                    metadata: metadata,
+                    currentValueETH: nft.currentValue,
+                    priceUSD: ethUsd ? nft.currentValue * ethUsd : 0,
+                    hasOffers: hasOffers,
+                    highestOfferPrice: highestOfferPrice,
+                    lastTransfer: nft.lastTransfer
+                });
             }
-        })
-    );
-    
-    // Remove nulls (non-active or errored NFTs)
-    const filteredListings = listedNfts.filter(nft => nft !== null);
-    const filteredAuctions = nftsOnAuction.filter(nft => nft !== null);
+        } catch (err) {
+            console.error(`Error processing token ${nft.tokenId}:`, err);
+        }
+    }));
     
     res.render("marketplace", { 
-        listings: filteredListings, 
-        auctions: filteredAuctions 
+        listings: listedNfts, 
+        auctions: nftsOnAuction,
+        unlisted: unlistedNfts
     });
 }
+
+async function fetchEthPrice() {
+    try {
+        const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+        const data = await response.json();
+
+        return data.ethereum.usd;
+    } catch (e) {
+        console.log("Error while fetching eth to usd exchange rate: " + e);
+        return null;
+    }
+};

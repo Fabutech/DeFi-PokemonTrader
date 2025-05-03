@@ -1,51 +1,91 @@
-<a href="/nft/<%= nft.tokenId %>" class="nft-link" style="text-decoration: none;">
+<a href="/nft/<%= nft.tokenId %>" class="nft-link <%= isListed ? 'nft-listed' : isOnAuction ? 'nft-auction' : 'nft-delisted' %> <%= nft.hasOffers ? 'nft-hasOffers' : '' %>" style="text-decoration: none;">
     <div class="nft-card enhanced-card">
+        <div class="nft-status">
+            <% if (isListed) { %>
+                <span class="status-text listed">Listed</span>
+                <div class="status-indicator listed"></div>
+            <% } else if (isOnAuction) { %>
+                <span class="status-text auction">Auction</span>
+                <div class="status-indicator auction"></div>
+            <% } %>
+        </div>
         <div class="nft-img-wrapper">
             <img src="<%= nft.metadata.image %>" alt="NFT Image">
             <div class="nft-details">
                 <h2 class="nft-name"><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %></h2>
                 <div class="nft-row">
-                    <% if (isAuction) { %>
+                    <% if (isOnAuction) { %>
                         <div class="nft-row-full"><strong>Highest Bid:</strong> <%= nft.priceETH + " ETH" %></div>
-                    <% } else { %>
+                    <% } else if (isListed) { %>
                         <div class="nft-row-full"><strong>Price:</strong> <%= nft.priceETH + " ETH" %></div>
+                    <% } else { %>
+                        <div class="nft-row-full"><strong>Current Value:</strong> <%= nft.currentValueETH + " ETH" %></div>
                     <% } %>
                 </div>
                 <div class="nft-row">
-                    <% if (nft.priceUSD) { %>
+                    <div class="nft-row-full">
+                        <strong><%= (isOnAuction || isListed) ? "USD" : "Value USD" %>:</strong> 
+                        <span>
+                            <% if (typeof nft.priceUSD === 'number') { %>
+                                $<%= nft.priceUSD.toFixed(2) %>
+                            <% } else { %>
+                                -
+                            <% } %>
+                        </span>
+                    </div>
+                </div>
+                <% if (nft.highestOfferPrice) { %>
+                    <div class="nft-row">
                         <div class="nft-row-full">
-                            <strong>USD:</strong> 
+                            <strong>Highest Offer:</strong> 
                             <span>
-                                <% if (typeof nft.priceUSD === 'number') { %>
-                                    $<%= nft.priceUSD.toFixed(2) %>
+                                <% if (typeof nft.highestOfferPrice === 'number') { %>
+                                    <%= nft.highestOfferPrice %> ETH
                                 <% } else { %>
                                     -
                                 <% } %>
                             </span>
                         </div>
-                    <% } %>
-                </div>
-                <% if (nft.expiry) { %>
-                    <div class="nft-row countdown" data-expiration="<%= nft.expiry %>">
-                        <% if (isAuction) { %>
-                            <div class="nft-row-full"><strong>Ends in:</strong> <span class="time-remaining">Loading...</span></div>
-                        <% } else { %>
-                            <div class="nft-row-full"><strong>Expires in:</strong> <span class="time-remaining">Loading...</span></div>
-                        <% } %>
                     </div>
+                <% } %>
+
+                <% if (nft.expiry || nft.lastTransfer) { %>
+                    <% if (isListed || isOnAuction) { %>
+                        <div class="nft-row countdown" data-expiration="<%= nft.expiry %>">
+                            <% if (isOnAuction) { %>
+                                <div class="nft-row-full"><strong>Ends in:</strong> <span class="time-remaining">Loading...</span></div>
+                            <% } else { %>
+                                <div class="nft-row-full"><strong>Expires in:</strong> <span class="time-remaining">Loading...</span></div>
+                            <% } %>
+                        </div>
+                    <% } %>
                     <div class="nft-row nft-row-full expiration-date">
                         <div class="nft-row-full">
-                            <strong>End Date:</strong> <span class="end-date-text">
-                                <%= new Date(Number(nft.expiry) * 1000).toLocaleString(undefined, {
-                                    year: 'numeric',
-                                    month: '2-digit',
-                                    day: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  }).replace(/(\d{2})[\/.-](\d{2})[\/.-](\d{4}),? ?(\d{2}:\d{2}) ?(AM|PM)?/, (match, d, m, y, t, ap) => {
-                                    return `${d}.${m}.${y}, ${t}${ap ? ' ' + ap : ''}`;
-                                  }); %>
-                            </span>
+                            <% if (isListed || isOnAuction) { %>
+                                <strong>End Date:</strong> <span class="end-date-text">
+                                    <%= new Date(Number(nft.expiry) * 1000).toLocaleString(undefined, {
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      }).replace(/(\d{2})[\/.-](\d{2})[\/.-](\d{4}),? ?(\d{2}:\d{2}) ?(AM|PM)?/, (match, d, m, y, t, ap) => {
+                                        return `${d}.${m}.${y}, ${t}${ap ? ' ' + ap : ''}`;
+                                      }); %>
+                                </span>
+                            <% } else { %>
+                                <strong>Last Transfer:</strong> <span class="end-date-text">
+                                    <%= new Date(Number(nft.lastTransfer)).toLocaleString(undefined, {
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      }).replace(/(\d{2})[\/.-](\d{2})[\/.-](\d{4}),? ?(\d{2}:\d{2}) ?(AM|PM)?/, (match, d, m, y, t, ap) => {
+                                        return `${d}.${m}.${y}, ${t}${ap ? ' ' + ap : ''}`;
+                                      }); %>
+                                </span>
+                            <% } %>
                         </div>
                     </div>
                 <% } %>

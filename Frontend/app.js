@@ -21,9 +21,10 @@ const ERC721_ABI = JSON.parse(fs.readFileSync(erc721AbiPath)).abi;
 const nftOwnershipSchema = new mongoose.Schema({
     tokenId: { type: String, required: true, unique: true },
     ownerAddress: { type: String, required: true },
-    lastUpdated: { type: Date, default: Date.now },
     currentlyForSale: { type: Boolean, default: false },
-    currentValue: { type: Number, default: 0 }
+    currentValue: { type: Number, default: 0 },
+    lastTransfer: { type: Date, default: Date.now },
+    lastUpdated: { type: Date, default: Date.now }
 });
 const tradingEventSchema = new mongoose.Schema({
     eventType: { type: String, required: true },

@@ -9,6 +9,7 @@ const nftOwnershipSchema = new mongoose.Schema({
     ownerAddress: { type: String, required: true },
     currentlyForSale: { type: Boolean, default: false },
     currentValue: { type: Number, default: 0 },
+    lastTransfer: { type: Date, default: Date.now },
     lastUpdated: { type: Date, default: Date.now }
 });
 
@@ -61,6 +62,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
                 if (existingRecord) {
                     // If the token is already in the DB, update the owner address
                     existingRecord.ownerAddress = to.toLowerCase();
+                    existingRecord.lastTransfer = Date.now();
                     existingRecord.lastUpdated = Date.now();
                     await existingRecord.save();
                 } else {
@@ -103,7 +105,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
                 from: seller.toLowerCase(),
                 price: ethers.formatEther(price)
             });
-            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: true });
+            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: true, lastUpdated: Date.now() });
       });
     
         tradingContract.on('NFTSold', async (tokenId, seller, buyer, price, event) => {
@@ -113,7 +115,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
                 to: buyer.toLowerCase(),
                 price: ethers.formatEther(price)
             });
-            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, currentValue: parseFloat(ethers.formatEther(price)) });
+            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, currentValue: parseFloat(ethers.formatEther(price)), lastUpdated: Date.now() });
         });
     
         tradingContract.on('AuctionStarted', async (tokenId, seller, startPrice, endTime, event) => {
@@ -122,7 +124,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
                 from: seller.toLowerCase(),
                 price: ethers.formatEther(startPrice)
             });
-            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: true });
+            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: true, lastUpdated: Date.now() });
         });
     
         tradingContract.on('NewBid', async (tokenId, bidder, amount, event) => {
@@ -139,7 +141,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
                 to: winner.toLowerCase(),
                 price: ethers.formatEther(amount)
             });
-            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, currentValue: parseFloat(ethers.formatEther(amount)) });
+            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, currentValue: parseFloat(ethers.formatEther(amount)), lastUpdated: Date.now() });
         });
     
         tradingContract.on('NFTDelisted', async (tokenId, seller, event) => {
@@ -147,7 +149,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
                 tokenId: tokenId.toString(),
                 from: seller.toLowerCase()
             });
-            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false });
+            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, lastUpdated: Date.now() });
         });
     
         tradingContract.on('BidWithdrawn', async (tokenId, bidder, amount, event) => {
@@ -179,7 +181,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
                 to: offerer.toLowerCase(),
                 price: ethers.formatEther(amount)
             });
-            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, currentValue: parseFloat(ethers.formatEther(amount)) });
+            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, currentValue: parseFloat(ethers.formatEther(amount)), lastUpdated: Date.now() });
         });
     } catch (e) {
         console.log(e);

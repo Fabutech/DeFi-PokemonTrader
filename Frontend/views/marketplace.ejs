@@ -25,37 +25,57 @@
         <div class="main-content-wrapper">
             <div class="text">Marketplace</div> <!--make it so it detects username?-->
 
-            <div class="marketplace-section">
-                <h2 class="section-title">Listed NFTs</h2>
-                <% if (listings.length > 0) { %>
-                  <div class="nft-grid-wrapper">
-                      <div class="nft-grid-container">
-                          <% listings.forEach(nft => { %>
-                              <%- include("marketplaceCard", { nft: nft, isAuction: false }) -%>
-                          <% }) %>
-                      </div>
-                  </div>
-                <% } else { %>
-                  <div class="info-text">No NFTs are currently listed for sale.</div>
-                <% } %>
-            </div>
-            
-            <div class="marketplace-section">
-                <h2 class="section-title">NFTs on Auction</h2>
-                <% if (auctions.length > 0) { %>
-                <div class="nft-grid-wrapper">
-                    <div class="nft-grid-container">
-                        <% auctions.forEach(nft => { %>
-                            <%- include("marketplaceCard", { nft: nft, isAuction: true }) -%>
-                        <% }) %>
-                    </div>
+            <div class="marketplace-search-wrapper">
+                <input type="text" id="marketplaceSearch" placeholder="Search by name or tokenId..." oninput="filterNFTs()"/>
+                <div class="marketplace-filter-controls">
+                    <button id="filterButton" class="white-btn" onclick="toggleFilterPopup()">Filter</button>
+                    <div id="activeFilters" class="active-filters"></div>
                 </div>
-                <% } else { %>
-                <div class="info-text">No NFTs are currently on auction.</div>
-                <% } %>
+            </div>
+
+            <div class="nft-grid-wrapper">
+                <div class="nft-grid-container">
+                    <% listings.forEach(nft => { %>
+                        <%- include("marketplaceCard", { nft: nft, isListed: true, isOnAuction: false }) -%>
+                    <% }) %>
+                    <% auctions.forEach(nft => { %>
+                        <%- include("marketplaceCard", { nft: nft, isListed: false, isOnAuction: true }) -%>
+                    <% }) %>
+                    <% unlisted.forEach(nft => { %>
+                        <%- include("marketplaceCard", { nft: nft, isListed: false, isOnAuction: false }) -%>
+                    <% }) %>
+                </div>
             </div>
         </div>
     </section>
+
+    <div id="filterPopup" class="popup hidden">
+        <div class="popup-content" style="position: relative;">
+            <span class="popup-close" onclick="toggleFilterPopup()" style="position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px;">&times;</span>
+            <h2>Filter NFTs</h2>
+            <p>Select the types of NFTs you want to see in the marketplace.</p>
+            
+            <div class="popup-checkbox-wrapper">
+                <div class="popup-field">
+                    <label><input type="checkbox" id="filterListed" checked> Listed</label>
+                </div>
+                <div class="popup-field">
+                    <label><input type="checkbox" id="filterAuction" checked> On Auction</label>
+                </div>
+                <div class="popup-field">
+                    <label><input type="checkbox" id="filterDelisted" checked> Delisted</label>
+                </div>
+                <div class="popup-field">
+                    <label><input type="checkbox" id="filterHasOffers" checked> Has Offers</label>
+                </div>
+            </div>
+
+            <div class="popup-buttons" style="margin-top: 15px;">
+                <button onclick="applyFilters()" class="blue-btn">Apply</button>
+                <button onclick="clearFilters()" class="white-btn">Clear</button>
+            </div>
+        </div>
+    </div>
 
     <!--JavaScript-->
     <script src="../js/navbar.js"></script>
@@ -86,6 +106,123 @@
             const interval = setInterval(updateCountdown, 1000);
             updateCountdown();
         });
+
+        // Neutral state: all filters enabled means no filtering applied
+        let activeFilterState = {
+            listed: true,
+            auction: true,
+            delisted: true,
+            hasOffers: true
+        };
+
+        function toggleFilterPopup() {
+            const popup = document.getElementById('filterPopup');
+            if(popup.classList.contains('hidden')) {
+                popup.classList.remove('hidden');
+            } else {
+                popup.classList.add('hidden');
+            }
+        }
+
+        function applyFilters() {
+            activeFilterState.listed = document.getElementById('filterListed').checked;
+            activeFilterState.auction = document.getElementById('filterAuction').checked;
+            activeFilterState.delisted = document.getElementById('filterDelisted').checked;
+            activeFilterState.hasOffers = document.getElementById('filterHasOffers').checked;
+            updateFilterTags();
+            filterNFTs();
+            toggleFilterPopup();
+        }
+
+        function clearFilters(closePopup = true) {
+            document.getElementById('filterListed').checked = true;
+            document.getElementById('filterAuction').checked = true;
+            document.getElementById('filterDelisted').checked = true;
+            document.getElementById('filterHasOffers').checked = true;
+
+            activeFilterState.listed = true;
+            activeFilterState.auction = true;
+            activeFilterState.delisted = true;
+            activeFilterState.hasOffers = true;
+
+            updateFilterTags();
+            filterNFTs();
+
+            if (closePopup) toggleFilterPopup();
+        }
+
+        function updateFilterTags() {
+            const container = document.getElementById('activeFilters');
+            container.innerHTML = '';
+
+            const allSelected = activeFilterState.listed && activeFilterState.auction && activeFilterState.delisted && activeFilterState.hasOffers;
+            if (allSelected) return;
+
+            Object.entries(activeFilterState).forEach(([key, value]) => {
+                if (!value) return;
+                const tag = document.createElement('span');
+                tag.className = 'filter-tag';
+                tag.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+
+                const close = document.createElement('span');
+                close.className = 'filter-tag-close';
+                close.textContent = '×';
+                close.onclick = () => {
+                    activeFilterState[key] = false;
+                    document.getElementById(`filter${key.charAt(0).toUpperCase() + key.slice(1)}`).checked = false;
+
+                    const remainingActive = Object.values(activeFilterState).some(v => v);
+                    if (!remainingActive) {
+                        clearFilters(false);
+                    } else {
+                        updateFilterTags();
+                        filterNFTs();
+                    }
+                };
+
+                tag.appendChild(close);
+                container.appendChild(tag);
+            });
+        }
+
+        function filterNFTs() {
+            const input = document.getElementById('marketplaceSearch').value.toLowerCase();
+            const cards = document.querySelectorAll('.nft-link');
+
+            cards.forEach(card => {
+                const name = card.querySelector('.nft-name')?.textContent.toLowerCase() || "";
+                const tokenId = card.getAttribute('href').split('/').pop();
+                const isListed = card.classList.contains('nft-listed');
+                const isOnAuction = card.classList.contains('nft-auction');
+                const hasOffers = card.classList.contains('nft-hasOffers');
+
+                const passesFilter = 
+                    (activeFilterState.listed && isListed) ||
+                    (activeFilterState.auction && isOnAuction) ||
+                    (activeFilterState.delisted && !isListed && !isOnAuction) ||
+                    (activeFilterState.hasOffers && hasOffers);
+
+
+                if ((name.includes(input) || tokenId.includes(input)) && passesFilter) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Check visibility of each section
+            document.querySelectorAll('.marketplace-section').forEach(section => {
+                const visibleCards = section.querySelectorAll('.nft-link:not([style*="display: none"])');
+                const sectionTitle = section.querySelector('.section-title');
+                if (visibleCards.length === 0) {
+                    section.style.display = 'none';
+                } else {
+                    section.style.display = '';
+                }
+            });
+        }
+
+        updateFilterTags();
     </script>
 </body>
 </html>
