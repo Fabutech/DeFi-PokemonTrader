@@ -16,8 +16,11 @@ export default function index(DB, tradingContract, nftContract, signer, helia) {
     })
 
     MainRouter.route("/transactions")
-    .get((req, res) => {
-        res.render("transactions");
+    .get(async (req, res) => {
+        const userAddress = req.session.walletAddress;
+        const contractOwner = await nftContract.connect(signer).contractOwner();
+
+        res.render("transactions", {isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase()});
     })
 
     return MainRouter

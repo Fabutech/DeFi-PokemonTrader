@@ -5,6 +5,8 @@ import { unixfs } from "@helia/unixfs";
 export default async function getUserNFTs(req, res, DB, nftContract, signer, helia) {
     const userAddress = req.session.walletAddress;
 
+    const contractOwner = await nftContract.connect(signer).contractOwner();
+
     if (!userAddress) {
         return res.render("connect");
     }
@@ -56,6 +58,7 @@ export default async function getUserNFTs(req, res, DB, nftContract, signer, hel
         currentlyForSale: currentlyForSale, 
         totalValueETH: totalValueETH, 
         totalValueUSD: totalValueUSD, 
-        userAddress: userAddress
+        userAddress: userAddress,
+        isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase()
     });
 }

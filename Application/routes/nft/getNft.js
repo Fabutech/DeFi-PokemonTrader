@@ -6,6 +6,8 @@ export default async function getNft(req, res, tradingContract, tradingContractA
     const tokenId = req.params.tokenId;
     const userAddress = req.session.walletAddress;
 
+    const contractOwner = await nftContract.connect(signer).contractOwner();
+
     const tokenUri = await nftContract.connect(signer).tokenURI(tokenId);
     const tokenOwner = await nftContract.connect(signer).ownerOf(tokenId);
 
@@ -126,6 +128,7 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         nft: nft, 
         isLoggedIn: userAddress ? true : false,
         isOwner: isOwner,
+        isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase(),
         hasActiveOffer: hasActiveOffer,
         hasPendingReturns: userAddress ? await tradingContract.connect(signer).hasPendingReturns(tokenId, userAddress) : false,
         tradingContractAddress: await tradingContract.getAddress(),

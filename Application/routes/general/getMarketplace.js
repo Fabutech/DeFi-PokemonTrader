@@ -6,6 +6,9 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
     const decoder = new TextDecoder();
     const fs = unixfs(helia);
 
+    const userAddress = req.session.walletAddress;
+    const contractOwner = await nftContract.connect(signer).contractOwner();
+
     const allNFTs = await DB.ownership.find({});
 
     const listedNfts = [];
@@ -100,7 +103,8 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
     res.render("marketplace", { 
         listings: listedNfts, 
         auctions: nftsOnAuction,
-        unlisted: unlistedNfts
+        unlisted: unlistedNfts,
+        isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase()
     });
 }
 
