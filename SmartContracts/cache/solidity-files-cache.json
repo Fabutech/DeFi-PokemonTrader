@@ -76,8 +76,8 @@
       ]
     },
     "/Users/fabutech/Documents/Projekte/DeFiApp/DeFiCode/SmartContracts/contracts/TradingContract.sol": {
-      "lastModificationDate": 1745914196733,
-      "contentHash": "f19f70653942c9c49aaa2fdf792ae836",
+      "lastModificationDate": 1746301725004,
+      "contentHash": "68ec8589b44023a4d27b320939fca380",
       "sourceName": "contracts/TradingContract.sol",
       "solcConfig": {
         "version": "0.8.28",

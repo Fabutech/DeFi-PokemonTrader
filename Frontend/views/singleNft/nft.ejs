@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="../../css/transactionHistory.css">
 
   <script src="../../js/transactionHistoryLoader.js"></script>
+  <script src="../../js/dutchAuction.js"></script>
   <script src="../../js/web3-utils.js"></script>
 
   <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
@@ -55,20 +56,22 @@
             <span><i class='bx bx-heart'></i> <%= nft.stats.favorites %> favorites</span>
           </div>
 
-          <% if (nft.isListed || nft.isOnAuction) { %>
+          <% if (nft.isListed || nft.isOnAuction || nft.isOnDutchAuction) { %>
             <div class="nft-sale-price-box">
               <div class="nft-sale-section">
                 <% if (nft.isListed) { %>
                   <div class="nft-sale-header">Sale ends <span id="saleEndDate"><%= nft.listing.expiration %></span></div>
-                <% } else { %>
+                <% } else if (nft.isOnAuction) { %>
                   <div class="nft-sale-header">Auction ends <span id="saleEndDate"><%= nft.auction.auction.endTimestamp %></span></div>
+                <% } else { %>
+                  <div class="nft-sale-header">Dutch Auction ends <span id="saleEndDate"><%= nft.dutchAuction.auction.endTimestamp %></span></div>
                 <% } %>
                 <div class="nft-sale-timer-grid">
                   <div><span id="hours" class="time-part">00</span><div class="time-label">Hours</div></div>
                   <div><span id="minutes" class="time-part">00</span><div class="time-label">Minutes</div></div>
                   <div><span id="seconds" class="time-part">00</span><div class="time-label">Seconds</div></div>
                 </div>
-                <div id="sale-ended-message" style="display: none;">Sale Ended</div>
+                <div id="sale-ended-message" style="display: none;"><%= nft.isListed ? "Sale Ended" : "Auction Ended" %></div>
               </div>
               <div class="divider-line"></div>
               <div class="nft-price-section">
@@ -80,7 +83,7 @@
                       <span class="usd-price">$<%= nft.priceUSD.toFixed(2) %></span>
                     <% } %>
                   </div>
-                <% } else { %>
+                <% } else if (nft.isOnAuction) { %>
                   <div class="auction-price-container">
                     <div class="auction-price-item">
                       <div class="nft-price-label">Current Highest Bid</div>
@@ -111,6 +114,34 @@
                       </div>
                     </div>
                   </div>
+                <% } else { %>
+                  <div class="auction-price-container">
+                    <div class="auction-price-item">
+                      <div class="nft-price-label">Current Price</div>  
+                      <div class="nft-price-value dutch-auction">
+                        <span id="dutch-auction-currentPrice-eth">- ETH</span>
+                        <span id="dutch-auction-currentPrice-usd" class="usd-price">$ -</span>
+                      </div>
+                    </div>
+                    <div class="auction-price-item">
+                      <div class="nft-price-label">Start Price</div>
+                      <div class="nft-price-value dutch-auction">
+                        <span><%= nft.dutchAuction.startPriceETH %> ETH</span>
+                        <% if (nft.dutchAuction.startPriceUSD) { %>
+                          <span class="usd-price">$<%= nft.dutchAuction.startPriceUSD.toFixed(2) %></span>
+                        <% } %>
+                      </div>
+                    </div>
+                    <div class="auction-price-item">
+                      <div class="nft-price-label">End Price</div>
+                      <div class="nft-price-value dutch-auction">
+                        <span><%= nft.dutchAuction.endPriceETH %> ETH</span>
+                        <% if (nft.dutchAuction.endPriceUSD) { %>
+                          <span class="usd-price">$<%= nft.dutchAuction.endPriceUSD.toFixed(2) %></span>
+                        <% } %>
+                      </div>
+                    </div>
+                  </div>
                 <% } %>
               </div>
     
@@ -124,11 +155,13 @@
                 <% if (hasPendingReturns) { %>
                   <button id="withdraw-bid-btn" class="white-btn half-width">Withdraw Bid</button>
                 <% } %>
-                <% if (!isOwner) { %>
+                <% if (!isOwner && isLoggedIn) { %>
                   <% if (nft.isListed) { %>
                     <button id="buy-btn" class="blue-btn half-width" data-price="<%= nft.priceETH %>">Buy now</button>
                   <% } else if (nft.isOnAuction && !nft.auction.hasEnded) { %>
                     <button id="place-bid-btn" class="blue-btn half-width">Place Bid</button>
+                  <% } else if (nft.isOnDutchAuction && !nft.dutchAuction.hasEnded) { %>
+                    <button id="buy-from-dutch-auction" class="blue-btn half-width">Buy now</button>
                   <% } %>
                   <% if (!hasActiveOffer) { %>
                     <button id="offer-btn" class="white-btn half-width">Make offer</button>
@@ -139,7 +172,9 @@
                   <% if (nft.isListed) { %>
                     <button id="delistNFTbtn" class="white-btn half-width">Delist NFT</button>
                   <% } else if (nft.isOnAuction && (!nft.auction.hasEnded || !nft.auction.hasBid)) { %>
-                      <button id="cancelAuctionBtn" class="white-btn half-width">Cancel Auction</button>
+                    <button id="cancelAuctionBtn" class="white-btn half-width">Cancel Auction</button>
+                  <% } else if (nft.isOnDutchAuction) { %>
+                    <button id="cancel-dutch-auction" class="white-btn half-width">Cancel Auction</button>
                   <% } %>
                 <% } %>
               </div>
@@ -162,7 +197,7 @@
                 <button id="withdraw-bid-btn" class="white-btn">Withdraw Bid</button>
               <% } %>
             </div>
-          <% } else { %>
+          <% } else if (isLoggedIn) { %>
             <div class="nft-sale-actions">
               <% if (!hasActiveOffer) { %>
                 <button id="offer-btn" class="blue-btn">Make offer</button>
@@ -217,11 +252,14 @@
     loadTokenOffers("<%= isOwner %>");
     loadAuctionHistory("<%= nft.isOnAuction %>", "<%= nft.isOnAuction ? nft.auction.startingPriceETH : 0 %>")
 
+    startDutchAuctionPriceUpdater("<%= nft.isOnDutchAuction ? nft.dutchAuction.auction.startPrice : 0 %>", "<%= nft.isOnDutchAuction ? nft.dutchAuction.auction.endPrice : 0 %>", "<%= nft.isOnDutchAuction ?  nft.dutchAuction.auction.startTimestamp : 0 %>", "<%= nft.isOnDutchAuction ?  nft.dutchAuction.auction.endTimestamp : 0 %>")
+
     setTimeout(() => {
       setupListNFTHandler();
       setupBuyNFTHandler();
       setupOfferNFTHandler(); 
       setupAuctionNFTHandler();  
+      setupDutchAuctionHandler();
     }, 100);
      
 

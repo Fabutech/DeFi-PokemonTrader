@@ -30,14 +30,26 @@ contract TradingContract {
         bool isActive;
     }
 
+    struct DutchAuction {
+        address seller;
+        uint256 startPrice;
+        uint256 endPrice;
+        uint256 startTimestamp;
+        uint256 endTimestamp;
+        bool isActive;
+    }
+
+
     // Mappings for sales and auctions
     mapping(uint256 => Listing) public listings;
     mapping(uint256 => Auction) public auctions;
+    mapping(uint256 => DutchAuction) public dutchAuctions;
     mapping(uint256 => mapping(address => uint256)) public pendingReturns;
     mapping(uint256 => mapping(address => Offer)) public offers;
     mapping(uint256 => address[]) public offerers;
 
-    // NFT Events
+
+    // Listing Events
     event NFTListed(uint256 indexed tokenId, address seller, uint256 price);
     event NFTSold(uint256 indexed tokenId, address seller, address buyer, uint256 price);
     event NFTDelisted(uint256 indexed tokenId, address seller);
@@ -47,11 +59,18 @@ contract TradingContract {
     event NewBid(uint256 indexed tokenId, address bidder, uint256 amount);
     event AuctionEnded(uint256 indexed tokenId, address winner, uint256 amount);
     event BidWithdrawn(uint256 indexed tokenId, address bidder, uint256 amount);
+    
+    // Dutch-Auction Events
+    event DutchAuctionStarted(uint256 indexed tokenId, address seller, uint256 startPrice, uint256 endPrice, uint256 endTime);
+    event DutchAuctionEnded(uint256 indexed tokenId, address buyer, uint256 amount);
+
+    // Offer Events
     event OfferMade(uint256 indexed tokenId, address indexed offerer, uint256 amount, uint256 expiration);
     event OfferCancelled(uint256 indexed tokenId, address indexed offerer);
     event OfferAccepted(uint256 indexed tokenId, address indexed offerer, uint256 amount);
 
-    // Modifiers
+
+    // ********************** MODIFIERS **********************
     modifier onlyOwner() {
         require(msg.sender == owner, "Only marketplace owner can call this");
         _;
@@ -83,12 +102,14 @@ contract TradingContract {
         owner = msg.sender;
     }
 
+
     // ********************** FIXED-PRICE LISTING **********************
 
     function listNFT(uint256 tokenId, uint256 price, uint256 expiration) external onlyTokenOwner(tokenId) {
         require(nftContract.getApproved(tokenId) == address(this) || nftContract.isApprovedForAll(msg.sender, address(this)),
             "Marketplace not approved to manage this NFT");
         require(expiration > block.timestamp, "Expiration must be in the future");
+        require(!auctions[tokenId].isActive && !dutchAuctions[tokenId].isActive, "Cannot list during an active auction");
 
         listings[tokenId] = Listing(msg.sender, price, expiration, true);
         emit NFTListed(tokenId, msg.sender, price);
@@ -118,11 +139,13 @@ contract TradingContract {
         emit NFTDelisted(tokenId, msg.sender);
     }
 
-    // ********************** AUCTION SYSTEM **********************
+
+    // ********************** AUCTIONS **********************
 
     function startAuction(uint256 tokenId, uint256 startingPrice, uint256 endTimeStamp) external onlyTokenOwner(tokenId) {
         require(nftContract.getApproved(tokenId) == address(this) || nftContract.isApprovedForAll(msg.sender, address(this)),
             "Marketplace not approved to manage this NFT");
+        require(!listings[tokenId].isActive && !dutchAuctions[tokenId].isActive, "Cannot start auction: NFT is listed or in Dutch auction");
 
         auctions[tokenId] = Auction({
             seller: msg.sender,
@@ -203,6 +226,85 @@ contract TradingContract {
         emit NFTDelisted(tokenId, msg.sender);
     }
 
+    function hasPendingReturns(uint256 tokenId, address user) external view returns (bool) {
+        return pendingReturns[tokenId][user] > 0;
+    }
+
+
+    // ********************** DUTCH-AUCTIONS **********************
+
+    function startDutchAuction(uint256 tokenId, uint256 startPrice, uint256 endPrice, uint256 duration) external onlyTokenOwner(tokenId) {
+        require(nftContract.getApproved(tokenId) == address(this) || nftContract.isApprovedForAll(msg.sender, address(this)),
+            "Marketplace not approved to manage this NFT");
+        require(startPrice > endPrice, "Start price must be greater than end price");
+        require(duration > 0, "Duration must be greater than zero");
+        require(!listings[tokenId].isActive && !auctions[tokenId].isActive, "Cannot start Dutch auction: NFT is listed or in regular auction");
+
+        uint256 endTime = block.timestamp + duration;
+
+        dutchAuctions[tokenId] = DutchAuction({
+            seller: msg.sender,
+            startPrice: startPrice,
+            endPrice: endPrice,
+            startTimestamp: block.timestamp,
+            endTimestamp: endTime,
+            isActive: true
+        });
+
+        emit DutchAuctionStarted(tokenId, msg.sender, startPrice, endPrice, endTime);
+    }
+
+    function buyFromDutchAuction(uint256 tokenId) external payable {
+        DutchAuction storage auction = dutchAuctions[tokenId];
+        require(auction.isActive, "Dutch auction not active");
+        require(block.timestamp <= auction.endTimestamp, "Auction expired");
+
+        uint256 elapsed = block.timestamp - auction.startTimestamp;
+        uint256 duration = auction.endTimestamp - auction.startTimestamp;
+        uint256 priceDiff = auction.startPrice - auction.endPrice;
+        uint256 currentPrice = auction.startPrice - (priceDiff * elapsed / duration);
+
+        require(msg.value >= currentPrice, "Insufficient funds");
+
+        auction.isActive = false;
+
+        // Transfer NFT to buyer
+        nftContract.safeTransferFrom(auction.seller, msg.sender, tokenId);
+
+        // Pay seller
+        payable(auction.seller).transfer(msg.value);
+
+        _clearOffers(tokenId);
+
+        emit DutchAuctionEnded(tokenId, msg.sender, msg.value);
+    }
+
+    function cancelDutchAuction(uint256 tokenId) external onlyTokenOwner(tokenId) {
+        DutchAuction storage auction = dutchAuctions[tokenId];
+        require(auction.isActive, "Dutch auction not active");
+
+        auction.isActive = false;
+        emit NFTDelisted(tokenId, msg.sender);
+    }
+
+    function getCurrentDutchPrice(uint256 tokenId) public view returns (uint256) {
+        DutchAuction memory auction = dutchAuctions[tokenId];
+        require(auction.isActive, "Auction not active");
+
+        if (block.timestamp >= auction.endTimestamp) {
+            return auction.endPrice;
+        }
+
+        uint256 elapsed = block.timestamp - auction.startTimestamp;
+        uint256 duration = auction.endTimestamp - auction.startTimestamp;
+        uint256 priceDiff = auction.startPrice - auction.endPrice;
+
+        return auction.startPrice - (priceDiff * elapsed / duration);
+    }
+
+
+    // ********************** OFFERS **********************
+
     function makeOffer(uint256 tokenId, uint256 expiration) external payable {
         require(msg.value > 0, "Offer amount must be greater than zero");
         require(expiration > block.timestamp, "Expiration must be in the future");
@@ -274,9 +376,8 @@ contract TradingContract {
         return result;
     }
 
-    function hasPendingReturns(uint256 tokenId, address user) external view returns (bool) {
-        return pendingReturns[tokenId][user] > 0;
-    }
+
+    // ********************** INTERNAL FUNCTIONS **********************
 
     function _clearOffers(uint256 tokenId) internal {
         address[] storage addrs = offerers[tokenId];

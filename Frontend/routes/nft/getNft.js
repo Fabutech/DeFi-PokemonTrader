@@ -58,6 +58,31 @@ export default async function getNft(req, res, tradingContract, tradingContractA
             hasEnded: auctionData.endTimestamp.toString() != "0" && Number(auctionData.endTimestamp.toString()) <= Math.floor(Date.now() / 1000)
         }
     }
+
+    const dutchAuctionData = await tradingContract.connect(signer).dutchAuctions(tokenId);
+    let dutchAuction = null;
+    if (!listing && !auctionData.isActive && dutchAuctionData.isActive) {
+        let startPriceUSD, endPriceUSD;
+        try {
+            const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+            const data = await response.json();
+            const ethUsd = data.ethereum.usd;
+
+            startPriceUSD = Number(ethers.formatEther(dutchAuctionData.startPrice.toString())) * ethUsd
+            endPriceUSD = Number(ethers.formatEther(dutchAuctionData.endPrice.toString())) * ethUsd
+        } catch (e) {
+            console.log("Error while fetching eth to usd exchange rate: " + e);
+        }
+
+        dutchAuction = {
+            auction: dutchAuctionData,
+            startPriceETH: ethers.formatEther(dutchAuctionData.startPrice.toString()),
+            startPriceUSD: startPriceUSD,
+            endPriceETH: ethers.formatEther(dutchAuctionData.endPrice.toString()),
+            endPriceUSD: endPriceUSD,
+            hasEnded: dutchAuctionData.endTimestamp.toString() != "0" && Number(dutchAuctionData.endTimestamp.toString()) <= Math.floor(Date.now() / 1000)
+        }
+    }
     
 
     // Fetch NFT metadata from the IPFS storage
@@ -88,15 +113,18 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         metadata: metadata,
         listing: listing,
         auction: auction,
+        dutchAuction: dutchAuction,
         priceETH: listing != null ? ethers.formatEther(listing.price.toString()) : 0,
         priceUSD: nftPriceUSD,
         stats: stats,
         isListed: listing != null,
-        isOnAuction: auction != null
+        isOnAuction: auction != null,
+        isOnDutchAuction: dutchAuction != null
     }
 
     res.render("singleNft/nft", {
         nft: nft, 
+        isLoggedIn: userAddress ? true : false,
         isOwner: isOwner,
         hasActiveOffer: hasActiveOffer,
         hasPendingReturns: userAddress ? await tradingContract.connect(signer).hasPendingReturns(tokenId, userAddress) : false,

@@ -52,8 +52,8 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
     const tradingIface = new Interface(tradingContractABI);
     const tradingContract = new ethers.Contract(tradingContractAddress, tradingIface, provider);
 
-    // Listen for Transfer events
     try {
+        // ********************** TRANSFER EVENTS OF NFT-CONTRACT **********************
         nftContract.on("Transfer", async (from, to, tokenId) => {
             try {
                 // Check if tokenId exists in the DB
@@ -89,16 +89,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
             }
         });
     
-        const saveEvent = async (eventType, data) => {
-            try {
-                const event = new TradingEvent({ eventType, ...data });
-                await event.save();
-                console.log(`${time()} Saved ${eventType} event:`, data);
-            } catch (error) {
-                console.error(`${time()} Failed to save ${eventType} event:`, error);
-            }
-        };
-    
+        // ********************** LISTING EVENTS **********************
         tradingContract.on('NFTListed', async (tokenId, seller, price, event) => {
             await saveEvent('List', {
                 tokenId: tokenId.toString(),
@@ -106,7 +97,7 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
                 price: ethers.formatEther(price)
             });
             await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: true, lastUpdated: Date.now() });
-      });
+        });
     
         tradingContract.on('NFTSold', async (tokenId, seller, buyer, price, event) => {
             await saveEvent('Sale', {
@@ -117,7 +108,17 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
             });
             await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, currentValue: parseFloat(ethers.formatEther(price)), lastUpdated: Date.now() });
         });
+
+        tradingContract.on('NFTDelisted', async (tokenId, seller, event) => {
+            await saveEvent('Delist', {
+                tokenId: tokenId.toString(),
+                from: seller.toLowerCase()
+            });
+            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, lastUpdated: Date.now() });
+        });
     
+
+        // ********************** AUCTION EVENTS **********************
         tradingContract.on('AuctionStarted', async (tokenId, seller, startPrice, endTime, event) => {
             await saveEvent('AuctionStarted', {
                 tokenId: tokenId.toString(),
@@ -134,6 +135,14 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
                 price: ethers.formatEther(amount)
             });
         });
+
+        tradingContract.on('BidWithdrawn', async (tokenId, bidder, amount, event) => {
+            await saveEvent('BidWithdrawn', {
+                tokenId: tokenId.toString(),
+                from: bidder.toLowerCase(),
+                price: ethers.formatEther(amount)
+            });
+        });
     
         tradingContract.on('AuctionEnded', async (tokenId, winner, amount, event) => {
             await saveEvent('AuctionEnded', {
@@ -143,23 +152,36 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
             });
             await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, currentValue: parseFloat(ethers.formatEther(amount)), lastUpdated: Date.now() });
         });
-    
-        tradingContract.on('NFTDelisted', async (tokenId, seller, event) => {
-            await saveEvent('Delist', {
+
+
+        // ********************** DUTCH-AUCTION EVENTS **********************
+        tradingContract.on('DutchAuctionStarted', async (tokenId, seller, startPrice, endPrice, endTime, event) => {
+            await saveEvent('DutchAuctionStarted', {
                 tokenId: tokenId.toString(),
-                from: seller.toLowerCase()
+                from: seller.toLowerCase(),
+                price: ethers.formatEther(startPrice)
             });
-            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, lastUpdated: Date.now() });
-        });
-    
-        tradingContract.on('BidWithdrawn', async (tokenId, bidder, amount, event) => {
-            await saveEvent('BidWithdrawn', {
-                tokenId: tokenId.toString(),
-                from: bidder.toLowerCase(),
-                price: ethers.formatEther(amount)
+            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, {
+                currentlyForSale: true,
+                lastUpdated: Date.now()
             });
         });
 
+        tradingContract.on('DutchAuctionEnded', async (tokenId, buyer, amount, event) => {
+            await saveEvent('DutchAuctionEnded', {
+                tokenId: tokenId.toString(),
+                to: buyer.toLowerCase(),
+                price: ethers.formatEther(amount)
+            });
+            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, {
+                currentlyForSale: false,
+                currentValue: parseFloat(ethers.formatEther(amount)),
+                lastUpdated: Date.now()
+            });
+        });
+
+
+        // ********************** OFFER EVENTS **********************
         tradingContract.on('OfferMade', async (tokenId, offerer, amount, expiration, event) => {
             await saveEvent('OfferMade', {
                 tokenId: tokenId.toString(),
@@ -184,10 +206,20 @@ export async function setupEventListener(nftContractAddress, nftContractABI, tra
             await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, currentValue: parseFloat(ethers.formatEther(amount)), lastUpdated: Date.now() });
         });
     } catch (e) {
+        // Retry behavior
         console.log(e);
         setupEventListener(nftContractAddress, nftContractABI, tradingContractAddress, tradingContractABI);
     }
     
+    const saveEvent = async (eventType, data) => {
+        try {
+            const event = new TradingEvent({ eventType, ...data });
+            await event.save();
+            console.log(`${time()} Saved ${eventType} event:`, data);
+        } catch (error) {
+            console.error(`${time()} Failed to save ${eventType} event:`, error);
+        }
+    };
 }
 
 async function connectMongoDB() {

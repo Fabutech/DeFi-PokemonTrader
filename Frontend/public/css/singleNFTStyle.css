@@ -358,3 +358,50 @@ body.dark .popup-field input {
   background-color: #3a3b3c;
   border: 1px solid #555;
 }
+  .popup-tabs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .popup-tab {
+    flex: 1;
+    padding: 10px 0;
+    background: #f3f4f6;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+
+  .popup-tab.active {
+    background-color: #3b82f6;
+    color: white;
+  }
+
+  .popup-tab:not(.active):hover {
+    background-color: #e0e0e0;
+  }
+
+  body.dark .popup-tab {
+    background: #3a3b3c;
+    color: #ccc;
+  }
+
+  body.dark .popup-tab.active {
+    background-color: #2563eb;
+    color: white;
+  }
+
+  body.dark .popup-tab:not(.active):hover {
+    background-color: #555;
+  }
+
+
+.nft-price-value.dutch-auction {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0px;
+}
