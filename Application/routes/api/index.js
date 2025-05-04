@@ -1,5 +1,6 @@
 import express from 'express';
 import { unixfs } from '@helia/unixfs';
+import { fromString } from 'uint8arrays/from-string';
 
 export default function index(DB, tradingContract, signer, helia) {
     const MainRouter = express.Router();
@@ -146,6 +147,41 @@ export default function index(DB, tradingContract, signer, helia) {
             res.status(500).send('Failed to fetch image from IPFS');
           }
     });
+
+    // POST /upload-nft: Accepts metadata and image URL, fetches image, uploads both to IPFS, returns metadata CID
+    MainRouter.route("/ipfs/upload")
+      .post(express.json({ limit: '10mb' }), async (req, res) => {
+        try {
+          const { metadata, imageUrl } = req.body;
+          const imageRes = await fetch(imageUrl);
+          if (!imageRes.ok) throw new Error(`Failed to fetch image: ${imageRes.statusText}`);
+          const arrayBuffer = await imageRes.arrayBuffer();
+          const imageBytes = new Uint8Array(arrayBuffer);
+          const imageCid = await fs.addBytes(imageBytes);
+          metadata.image = imageCid.toString();
+          const metadataCid = await fs.addBytes(fromString(JSON.stringify(metadata)));
+          res.send({ ipfsURI: `ipfs://${metadataCid.toString()}` });
+        } catch (err) {
+          console.error("Upload failed:", err);
+          res.status(500).send({message: "IPFS upload failed"});
+        }
+      });
+
+      MainRouter.route("/ipfs/upload-bytes")
+      .post(express.json({ limit: '100mb' }), async (req, res) => {
+        try {
+          const { metadata, imageBytesBase64 } = req.body;
+          const imageBytes = Buffer.from(imageBytesBase64, 'base64');
+          const imageCid = await fs.addBytes(imageBytes);
+          metadata.image = imageCid.toString();
+          console.log("Decoded image size:", imageBytes.length);
+          const metadataCid = await fs.addBytes(fromString(JSON.stringify(metadata)));
+          res.send({ ipfsURI: `ipfs://${metadataCid.toString()}` });
+        } catch (err) {
+          console.error("Upload-bytes failed:", err);
+          res.status(500).send({message: "IPFS upload failed"});
+        }
+      });
 
     return MainRouter
 }

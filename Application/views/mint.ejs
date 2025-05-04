@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mint | Poke Trader</title>
+    <link rel="icon" type="image/doge-icon" href="../images/favicon-96x96.ico">
+
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../../css/mint.css">
+
+    <!-- Boxicons CSS -->
+    <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+
+</script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+</head>
+<body>
+    <%- include("partials/navbar") -%>
+
+    <section class="main-container home">
+        <div class="main-content-wrapper">
+            
+            <div class="tabs">
+                <button class="tab-button active" data-tab="auto-mint">Auto Mint</button>
+                <button class="tab-button" data-tab="manual-mint">Manual Mint</button>
+            </div>
+
+            <div id="mintStatus" class="mint-status"></div>
+
+            <div class="tab-content active" id="auto-mint">
+                <h2 class="tab-title">Auto Mint NFTs</h2>
+                <p class="tab-description">This feature uses the <a href="https://pokeapi.co/" target="_blank">PokeAPI</a> to mint Pokémon NFTs automatically.</p>
+                <form id="autoMintForm">
+                    <label for="startIndex">Start Index:</label>
+                    <input type="number" id="startIndex" name="startIndex" required>
+
+                    <label for="amount">Number of Pokémons to Mint:</label>
+                    <input type="number" id="amount" name="amount" required>
+
+                    <label for="mintTo">Mint To Address:</label>
+                    <input type="text" id="mintTo" name="mintTo" required value="<%= userAddress %>">
+
+                    <button type="submit">Mint Automatically</button>
+                </form>
+            </div>
+
+            <div class="tab-content" id="manual-mint">
+                <h2 class="tab-title">Manual Mint NFTs</h2>
+                <p class="tab-description">Create you own custom Pokemon NFT's.</p>
+                <form id="manualMintForm" enctype="multipart/form-data">
+                    <label for="name">Pokémon Name:</label>
+                    <input type="text" id="name" name="name" required>
+
+                    <label for="image">Image Upload:</label>
+                    <input type="file" id="image" name="image" accept=".png,.jpg,.jpeg" required>
+
+                    <label for="type">Type:</label>
+                    <input type="text" id="type" name="type" required>
+
+                    <div class="form-row">
+                        <label for="height">Height:</label>
+                        <input type="number" id="height" name="height" required>
+                        <label for="weight">Weight:</label>
+                        <input type="number" id="weight" name="weight" required>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="hp">HP:</label>
+                        <input type="number" id="hp" name="hp" required>
+                        <label for="speed">Speed:</label>
+                        <input type="number" id="speed" name="speed" required>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="defense">Defense:</label>
+                        <input type="number" id="defense" name="defense" required>
+                        <label for="attack">Attack:</label>
+                        <input type="number" id="attack" name="attack" required>
+                    </div>
+
+                    <label for="mintTo">Mint To Address:</label>
+                    <input type="text" id="mintTo" name="mintTo" required value="<%= userAddress %>">
+
+                    <button type="submit">Mint Manually</button>
+                </form>
+            </div>
+
+        </div>
+    </section>
+
+</section>
+    <script>
+        const nftContractAddress = "<%= nftContractAddress %>";
+        const nftContractABI = JSON.parse(`<%- JSON.stringify(nftContractABI) %>`); 
+
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+    </script>
+
+    <script src="../js/navbar.js"></script>
+    <script src="../js/web3-utils.js"></script>
+    <script src="../js/web3-mint.js"></script>
+
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner"></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<link rel="stylesheet" href="../css/navbar.css">
+
+<nav class="sidebar close">
+    <header>
+        <div class="image-text">
+            <span class="image">
+                <img src="../images/logo.png" alt="logo">
+            </span>
+
+            <div class="text logo-text">
+                <span class="name">Poke Trader</span>
+            </div>
+        </div>
+
+        <!--These i class are imported with boxicons-->
+        <i class='bx bx-chevron-right toggle'></i> <!--for in out toggle of the navbar, imported from boxicons-->
+    </header>
+
+    <div class="menu-bar">
+        <div class="menu">
+            <!--unordered list for all icons and texts which are part of the navbar to change site-->
+            <ul class="menu-links">
+                <li class="nav-link">
+                    <a href="/">
+                        <i class='bx bx-home-alt icon' ></i> <!--icon imported from boxicons-->
+                        <span class="text nav-text">Marketplace</span>
+                    </a>
+                </li>
+
+                <li class="nav-link">
+                    <a id="userNFTs-href" href="/user/nfts"> <!--icon imported from boxicons-->
+                        <i class='bx bxs-invader icon'></i>
+                        <span class="text nav-text">Your NFT's</span>
+                    </a>
+                </li>
+
+                <li class="nav-link">
+                    <a href="">
+                        <i class='bx bx-collection icon' ></i> <!--icon imported from boxicons-->
+                        <span class="text nav-text">Collections</span>
+                    </a>
+                </li>
+
+                <li class="nav-link">
+                    <a href="/user/mint">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style="width: 24px; height: 24px;" class="icon" stroke="var(--text-color)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                            <g xmlns="http://www.w3.org/2000/svg" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g transform="translate(0.000000, -1.000000)" fill="var(--text-color)" fill-rule="nonzero"><path d="M59.992,38.865 C59.9936834,38.8148932 59.9913425,38.7647322 59.985,38.715 C59.214,27.871 50.843,19.384 50.485,19.027 L49.774,18.316 L51.2,16.892 C51.978679,16.1097479 51.978679,14.8452521 51.2,14.063 L46.936,9.8 C46.560904,9.42475199 46.0520734,9.21392707 45.5215,9.21392707 C44.9909266,9.21392707 44.482096,9.42475199 44.107,9.8 L42.684,11.223 L41.973,10.512 C41.617,10.155 33.173,1.829 22.308,1.012 C21.863989,0.923685818 21.4160312,1.14467749 21.2159203,1.55075733 C21.0158094,1.95683716 21.1134668,2.44670092 21.454,2.745 C21.5489826,2.82623764 21.6576817,2.88989942 21.775,2.933 C22.275,3.148 28.332,5.838 37.311,14.397 L33.4,19.094 C33.0693098,19.491503 33.0961927,20.0755555 33.462,20.441 L33.513,20.493 C30.271,24.229 14.385,42.27 0.741,53.346 C0.301730304,53.7027687 0.0341618095,54.2289285 0.00461889213,54.794056 C-0.0249240253,55.3591834 0.186324289,55.9103741 0.586,56.311 L4.686,60.411 C5.06049372,60.7871992 5.56917937,60.9990916 6.1,61 C6.134,61 6.16733333,61 6.2,61 C6.76572159,60.9703165 7.29231684,60.7021127 7.649,60.262 C18.73,46.615 36.771,30.729 40.507,27.484 L40.559,27.535 C40.9244445,27.9008073 41.508497,27.9276902 41.906,27.597 L46.6,23.689 C55.35,32.868 57.966,38.989 58.074,39.25 C58.106376,39.3211677 58.1469868,39.3882928 58.195,39.45 C58.2121175,39.4843717 58.2311473,39.5177574 58.252,39.55 C58.2913746,39.5844078 58.3335172,39.615513 58.378,39.643 C58.6702845,39.8987739 59.0863145,39.9571277 59.4376873,39.7916355 C59.78906,39.6261433 60.0090371,39.2682379 59.998,38.88 L59.992,38.865 Z M45.522,11.217 L49.783,15.479 L48.359,16.9 L44.099,12.64 L45.522,11.217 Z M28.058,4.251 C32.4111415,5.83814792 36.4252112,8.23349338 39.889,11.311 L38.589,12.865 C35.3237683,9.70642779 31.8012725,6.82514598 28.058,4.251 Z M6.1,59 L2,54.9 C15.642,43.826 31.458,25.907 34.934,21.911 L39.089,26.066 C35.093,29.542 17.175,45.359 6.1,59 Z M41.327,25.476 L35.527,19.676 L41.336,12.706 L41.981,13.351 L47.655,19.025 L48.3,19.67 L41.327,25.476 Z M49.69,21.111 C52.7733045,24.5774611 55.170722,28.5975892 56.755,32.958 C54.1811797,29.2062692 51.2977762,25.6766087 48.135,22.406 L49.69,21.111 Z"/></g></g>
+                        </svg>
+                        <span class="text nav-text">Mint</span>
+                    </a>
+                </li>
+
+                <li class="nav-link">
+                    <a href="/transactions">
+                        <i class='bx bxs-book icon'></i> <!--icon imported from boxicons-->
+                        <span class="text nav-text">Transactions</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="bottom-content">
+            <li id="connectWallet-btn" class="nav-link">
+                <a href="">
+                    <i id="connectWallet-icon" class='bx bx-log-in icon' ></i> <!--icon imported from boxicons-->
+                    <span id="connectWallet-text" class="text nav-text">Connect</span>
+                </a>
+            </li>
+
+            <li class="mode">
+                <div class="sun-moon">
+                    <i class='bx bx-moon icon moon'></i>
+                    <i class='bx bx-sun icon sun'></i>
+                </div>
+                <span class="mode-text text">Dark mode</span>
+
+                <div class="toggle-switch">
+                    <span class="switch"></span>
+                </div>
+            </li>
+            
+        </div>
+    </div>
+
+</nav>

@@ -29,8 +29,6 @@
 }
 
 .sidebar .icon{
-    min-width: 60px;
-    border-radius: 6px;
     height: 100%;
     display: flex;
     align-items: center;
