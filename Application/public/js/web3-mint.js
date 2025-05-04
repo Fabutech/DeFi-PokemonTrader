@@ -41,6 +41,9 @@ document.getElementById('autoMintForm').addEventListener('submit', async (e) => 
   const amount = parseInt(document.getElementById('amount').value);
 
   try {
+    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+    const account = accounts[0];
+
     const pokemons = await fetchPokemonData(startIndex, amount);
 
     const ipfsURIs = await Promise.all(pokemons.map(async (pokemon) => {
@@ -73,9 +76,9 @@ document.getElementById('autoMintForm').addEventListener('submit', async (e) => 
 
     const web3 = new Web3(window.ethereum);
     const nftContract = new web3.eth.Contract(nftContractABI, nftContractAddress);
-    const estimatedGas = await nftContract.methods.batchMint(mintTo, ipfsURIs).estimateGas({ from: mintTo });
+    const estimatedGas = await nftContract.methods.batchMint(mintTo, ipfsURIs).estimateGas({ from: account });
     await nftContract.methods.batchMint(mintTo, ipfsURIs).send({
-      from: mintTo,
+      from: account,
       gas: estimatedGas + 1000n
     });
 
@@ -107,6 +110,9 @@ document.getElementById('manualMintForm').addEventListener('submit', async (e) =
   const imageFile = form.image.files[0];
 
   try {
+    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+    const account = accounts[0];
+
     const arrayBuffer = await imageFile.arrayBuffer();
     
     function arrayBufferToBase64(buffer) {
@@ -149,9 +155,9 @@ document.getElementById('manualMintForm').addEventListener('submit', async (e) =
 
     const web3 = new Web3(window.ethereum);
     const nftContract = new web3.eth.Contract(nftContractABI, nftContractAddress);
-    const estimatedGas = await nftContract.methods.mintTo(mintTo, ipfsURI).estimateGas({ from: mintTo });
+    const estimatedGas = await nftContract.methods.mintTo(mintTo, ipfsURI).estimateGas({ from: account });
     await nftContract.methods.mintTo(mintTo, ipfsURI).send({
-      from: mintTo,
+      from: account,
       gas: estimatedGas + 1000n
     });
 
