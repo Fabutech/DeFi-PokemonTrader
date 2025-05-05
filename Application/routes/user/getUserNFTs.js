@@ -8,7 +8,7 @@ export default async function getUserNFTs(req, res, DB, nftContract, signer, hel
     const contractOwner = await nftContract.connect(signer).contractOwner();
 
     if (!userAddress) {
-        return res.render("connect");
+        return res.render("connect", { isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase() });
     }
 
     const decoder = new TextDecoder();
