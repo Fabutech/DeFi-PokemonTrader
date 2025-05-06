@@ -3,6 +3,18 @@ import { TextDecoder } from 'util';
 import { unixfs } from "@helia/unixfs";
 
 export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
+
+    async function getEthUsdPrice() {
+        try {
+            const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+            const data = await response.json();
+            return data.ethereum.usd;
+        } catch (e) {
+            console.log("Error while fetching eth to usd exchange rate: " + e);
+            return null;
+        }
+    }
+
     const tokenId = req.params.tokenId;
     const userAddress = req.session.walletAddress;
 
@@ -25,13 +37,9 @@ export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
         listing = null;
         nftPriceUSD = null;
     } else {
-        try {
-            const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
-            const data = await response.json();
-            const ethUsd = data.ethereum.usd;
+        const ethUsd = await getEthUsdPrice();
+        if (ethUsd !== null) {
             nftPriceUSD = Number(ethers.formatEther(listing.price.toString())) * ethUsd;
-        } catch (e) {
-            console.log("Error while fetching eth to usd exchange rate: " + e);
         }
     }
 
@@ -39,15 +47,10 @@ export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
     let auction = null;
     if (!listing && auctionData.isActive) {
         let startingPriceUSD, highestBidUSD;
-        try {
-            const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
-            const data = await response.json();
-            const ethUsd = data.ethereum.usd;
-
-            startingPriceUSD = Number(ethers.formatEther(auctionData.startingPrice.toString())) * ethUsd
-            highestBidUSD = Number(ethers.formatEther(auctionData.highestBid.toString())) * ethUsd
-        } catch (e) {
-            console.log("Error while fetching eth to usd exchange rate: " + e);
+        const ethUsd = await getEthUsdPrice();
+        if (ethUsd !== null) {
+            startingPriceUSD = Number(ethers.formatEther(auctionData.startingPrice.toString())) * ethUsd;
+            highestBidUSD = Number(ethers.formatEther(auctionData.highestBid.toString())) * ethUsd;
         }
 
         auction = {
@@ -65,15 +68,10 @@ export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
     let dutchAuction = null;
     if (!listing && !auctionData.isActive && dutchAuctionData.isActive) {
         let startPriceUSD, endPriceUSD;
-        try {
-            const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
-            const data = await response.json();
-            const ethUsd = data.ethereum.usd;
-
-            startPriceUSD = Number(ethers.formatEther(dutchAuctionData.startPrice.toString())) * ethUsd
-            endPriceUSD = Number(ethers.formatEther(dutchAuctionData.endPrice.toString())) * ethUsd
-        } catch (e) {
-            console.log("Error while fetching eth to usd exchange rate: " + e);
+        const ethUsd = await getEthUsdPrice();
+        if (ethUsd !== null) {
+            startPriceUSD = Number(ethers.formatEther(dutchAuctionData.startPrice.toString())) * ethUsd;
+            endPriceUSD = Number(ethers.formatEther(dutchAuctionData.endPrice.toString())) * ethUsd;
         }
 
         dutchAuction = {
@@ -86,6 +84,31 @@ export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
         }
     }
     
+    const sealedBidAuctionData = await CONTRACTS.sealedBidContract.connect(signer).auctions(tokenId);
+    
+    console.log(sealedBidAuctionData);
+    
+    let sealedBidAuction = null;
+    if (!listing && !auctionData.isActive && !dutchAuctionData.isActive && sealedBidAuctionData.isActive) {
+        let startingPriceUSD, highestBidUSD;
+        const ethUsd = await getEthUsdPrice();
+        if (ethUsd !== null) {
+            startingPriceUSD = Number(ethers.formatEther(sealedBidAuctionData.startingPrice.toString())) * ethUsd;
+            highestBidUSD = Number(ethers.formatEther(sealedBidAuctionData.highestBid.toString())) * ethUsd;
+        }
+
+        sealedBidAuction = {
+            auction: sealedBidAuctionData,
+            startingPriceETH: ethers.formatEther(sealedBidAuctionData.startingPrice.toString()),
+            startingPriceUSD: startingPriceUSD,
+            highestBidETH: ethers.formatEther(sealedBidAuctionData.highestBid.toString()),
+            highestBidUSD: highestBidUSD,
+            hasBid: sealedBidAuctionData.highestBid.toString() != 0,
+            hasEnded: sealedBidAuctionData.endTimestamp.toString() != "0" && Number(sealedBidAuctionData.endTimestamp.toString()) <= Math.floor(Date.now() / 1000)
+        }
+    }
+
+    console.log(sealedBidAuction);
 
     // Fetch NFT metadata from the IPFS storage
     const decoder = new TextDecoder();
@@ -116,12 +139,14 @@ export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
         listing: listing,
         auction: auction,
         dutchAuction: dutchAuction,
+        sealedBidAuction: sealedBidAuction,
         priceETH: listing != null ? ethers.formatEther(listing.price.toString()) : 0,
         priceUSD: nftPriceUSD,
         stats: stats,
         isListed: listing != null,
         isOnAuction: auction != null,
-        isOnDutchAuction: dutchAuction != null
+        isOnDutchAuction: dutchAuction != null,
+        isOnSealedBidAuction: sealedBidAuction != null
     }
 
     const contractAddresses = {
@@ -129,9 +154,15 @@ export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
         tradingContractAddress: await CONTRACTS.tradingContract.getAddress(),
         auctionContractAddress: await CONTRACTS.auctionContract.getAddress(),
         dutchContractAddress: await CONTRACTS.dutchContract.getAddress(),
+        sealedBidContractAddress: await CONTRACTS.sealedBidContract.getAddress(),
         offerContractAddress: await CONTRACTS.offerContract.getAddress(),
         fixedContractAddress: await CONTRACTS.fixedContract.getAddress(),
     }
+
+    const hasPendingReturns = userAddress ? 
+        await CONTRACTS.auctionContract.connect(signer).hasPendingReturns(tokenId, userAddress) || 
+        await CONTRACTS.sealedBidContract.connect(signer).hasPendingReturns(tokenId, userAddress) :
+        false;
 
     res.render("singleNft/nft", {
         nft: nft, 
@@ -139,7 +170,7 @@ export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
         isOwner: isOwner,
         isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase(),
         hasActiveOffer: hasActiveOffer,
-        hasPendingReturns: userAddress ? await CONTRACTS.auctionContract.connect(signer).hasPendingReturns(tokenId, userAddress) : false,        
+        hasPendingReturns: hasPendingReturns,        
         ABIS: ABIS,
         contractAddresses: contractAddresses
     });

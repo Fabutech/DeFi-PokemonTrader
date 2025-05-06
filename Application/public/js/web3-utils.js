@@ -162,7 +162,7 @@ function setupListNFTHandler() {
                     }, 2000);
                 } catch (err) {
                     console.error("Failed to list NFT", err);
-                    document.getElementById("listing-status").innerText = "❌ " + err.message;
+                    document.getElementById("listing-status").innerText = "❌ " + err.data.data.message;
                     document.getElementById("listing-status").style.color = "red";
                 }
             };
@@ -193,7 +193,7 @@ function setupListNFTHandler() {
                 showStatusMessage("✅ NFT delisted successfully!");
             } catch (err) {
                 console.error("Failed to list NFT", err);
-                showStatusMessage("❌ " + err.message, false);
+                showStatusMessage("❌ " + err.data.data.message, false);
             }
         });
     }
@@ -248,7 +248,7 @@ function setupBuyNFTHandler() {
                 showStatusMessage("✅ NFT purchased successfully!");
             } catch (err) {
                 console.error("Failed to buy NFT", err);
-                showStatusMessage("❌ " + err.message, false);
+                showStatusMessage("❌ " + err.data.data.message, false);
             }
         });
     }
@@ -300,7 +300,7 @@ function setupOfferNFTHandler() {
                 }, 2000);
             } catch (err) {
                 console.error("Failed to submit offer", err);
-                offerStatus.innerText = "❌ " + err.message;
+                offerStatus.innerText = "❌ " + err.data.data.message;
                 offerStatus.style.color = "red";
             }
         });
@@ -322,7 +322,7 @@ function setupOfferNFTHandler() {
                 showStatusMessage("✅ Offer withdrawn successfully!");
             } catch (err) {
                 console.error("Failed to withdraw offer", err);
-                showStatusMessage("❌ " + err.message, false);
+                showStatusMessage("❌ " + err.data.data.message, false);
             }
         });
     }
@@ -351,7 +351,7 @@ function setupOfferNFTHandler() {
                 showStatusMessage("✅ Offer accepted successfully!");
             } catch (err) {
                 console.error("Failed to accept offer", err);
-                showStatusMessage("❌ " + err.message, false);
+                showStatusMessage("❌ " + err.data.data.message, false);
             }
         });
     });
@@ -367,6 +367,7 @@ function setupAuctionNFTHandler() {
     const web3 = new Web3(window.ethereum);
     const nftContract = new web3.eth.Contract(ABIS.erc721ABI.abi, contractAddresses.nftContractAddress);
     const auctionContract = new web3.eth.Contract(ABIS.auctionABI.abi, contractAddresses.auctionContractAddress);
+    const sealedBidContract = new web3.eth.Contract(ABIS.sealedBidABI.abi, contractAddresses.sealedBidContractAddress);
 
     if (auctionBtn) {
         auctionBtn.addEventListener("click", async () => {
@@ -417,7 +418,7 @@ function setupAuctionNFTHandler() {
                     }, 2000);
                 } catch (err) {
                     console.error("Failed to start auction", err);
-                    document.getElementById("start-auction-status").innerText = "❌ " + err.message;
+                    document.getElementById("start-auction-status").innerText = "❌ " + err.data.data.message;
                     document.getElementById("start-auction-status").style.color = "red";
                 }
             };
@@ -449,7 +450,7 @@ function setupAuctionNFTHandler() {
                 showStatusMessage("✅ Auction canceled successfully!");
             } catch (err) {
                 console.error("Failed to cancel auction", err);
-                showStatusMessage("❌ " + err.message, false);
+                showStatusMessage("❌ " + err.data.data.message, false);
             }
         });
     }
@@ -492,7 +493,7 @@ function setupAuctionNFTHandler() {
                     }, 2000);
                 } catch (err) {
                     console.error("Failed to place bid", err);
-                    document.getElementById("placeBid-status").innerText = "❌ " + err.message;
+                    document.getElementById("placeBid-status").innerText = "❌ " + err.data.data.message;
                     document.getElementById("placeBid-status").style.color = "red";
                 }
             };
@@ -516,16 +517,25 @@ function setupAuctionNFTHandler() {
                     return;
                 }
 
-                const estimatedGas = await auctionContract.methods.withdrawBid(tokenId).estimateGas({ from: account });
-                await auctionContract.methods.withdrawBid(tokenId).send({
-                    from: account,
-                    gas: estimatedGas + 1000n
-                });
-
+                if (await auctionContract.methods.hasPendingReturns(tokenId, account).call() == true) {
+                    const estimatedGas = await auctionContract.methods.withdrawBid(tokenId).estimateGas({ from: account });
+                    await auctionContract.methods.withdrawBid(tokenId).send({
+                        from: account,
+                        gas: estimatedGas + 1000n
+                    });
+                }
+                if (await sealedBidContract.methods.hasPendingReturns(tokenId, account).call() == true) {
+                    const estimatedGas = await sealedBidContract.methods.withdrawBid(tokenId).estimateGas({ from: account });
+                    await sealedBidContract.methods.withdrawBid(tokenId).send({
+                        from: account,
+                        gas: estimatedGas + 1000n
+                    });
+                }
+                
                 showStatusMessage("✅ Bid withdrawn successfully!");
             } catch (err) {
                 console.error("Failed to withdraw bid", err);
-                showStatusMessage("❌ " + err.message, false);
+                showStatusMessage("❌ " + err.data.data.message, false);
             }
         });
     }
@@ -556,7 +566,7 @@ function setupAuctionNFTHandler() {
                 showStatusMessage("✅ Auction finalized successfully!");
             } catch (err) {
                 console.error("Failed to finalize auction", err);
-                showStatusMessage("❌ " + err.message, false);
+                showStatusMessage("❌ " + err.data.data.message, false);
             }
         });
     }
@@ -606,7 +616,7 @@ function setupDutchAuctionHandler() {
                 }, 2000);
             } catch (err) {
                 console.error("Failed to start Dutch auction", err);
-                document.getElementById("start-dutch-auction-status").innerText = "❌ " + err.message;
+                document.getElementById("start-dutch-auction-status").innerText = "❌ " + err.data.data.message;
                 document.getElementById("start-dutch-auction-status").style.color = "red";
             }
         });
@@ -635,7 +645,7 @@ function setupDutchAuctionHandler() {
                 showStatusMessage("✅ NFT purchased via Dutch auction!");
             } catch (err) {
                 console.error("Failed to buy from Dutch auction", err);
-                showStatusMessage("❌ " + err.message, false);
+                showStatusMessage("❌ " + err.data.data.message, false);
             }
         });
     }
@@ -655,10 +665,196 @@ function setupDutchAuctionHandler() {
                 showStatusMessage("✅ Dutch auction canceled successfully!");
             } catch (err) {
                 console.error("Failed to cancel Dutch auction", err);
-                showStatusMessage("❌ " + err.message, false);
+                showStatusMessage("❌ " + err.data.data.message, false);
             }
         });
     }
+}
+
+function setupSealedBidAuctionHandler() {
+    const confirmBtn = document.getElementById("confirm-sealedbid-auction-start");
+    const finalizeBtn = document.getElementById("finalize-sealedbid-auction");
+    const cancelBtn = document.getElementById("cancel-sealedbid-auction");
+    const showPlaceBidPopupBtn = document.getElementById("place-sealedbid-bid");
+    const showRevealBidPopupBtn = document.getElementById("reveal-sealedbid-bid");
+
+    const web3 = new Web3(window.ethereum);
+    const sealedBidContract = new web3.eth.Contract(ABIS.sealedBidABI.abi, contractAddresses.sealedBidContractAddress);
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener("click", async () => {
+            const startPriceEth = document.getElementById("sealedbid-start-price").value;
+            const endDate = document.getElementById("sealedbid-end-date").value;
+            const endTime = document.getElementById("sealedbid-end-time").value;
+
+            const statusField = document.getElementById("start-sealedbid-auction-status");
+
+            if (!startPriceEth || !endDate || !endTime) {
+                statusField.innerText = "⚠️ Please fill in all fields.";
+                statusField.style.color = "red";
+                return;
+            }
+
+            const startPrice = Web3.utils.toWei(startPriceEth, "ether");
+            const endTimestamp = Math.floor(new Date(`${endDate}T${endTime}`).getTime() / 1000);
+
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                const account = accounts[0];
+
+                console.log({ tokenId, startPrice, endTimestamp });
+
+                const estimatedGas = await sealedBidContract.methods.startAuction(tokenId, startPrice, endTimestamp).estimateGas({ from: account });
+                await sealedBidContract.methods.startAuction(tokenId, startPrice, endTimestamp).send({
+                    from: account,
+                    gas: estimatedGas + 1000n
+                });
+
+                statusField.innerText = "✅ Sealed-bid auction started successfully!";
+                statusField.style.color = "green";
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } catch (err) {
+                console.error("Failed to start sealed-bid auction", err);
+                statusField.innerText = "❌ " + err.data.data.message;
+                statusField.style.color = "red";
+            }
+        });
+    }
+
+    if (finalizeBtn) {
+        finalizeBtn.addEventListener("click", async () => {
+            const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+            const account = accounts[0];
+            await sealedBidContract.methods.finalizeAuction(tokenId).send({ from: account });
+            location.reload();
+        });
+    }
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", async () => {
+            const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+            const account = accounts[0];
+            await sealedBidContract.methods.cancelAuction(tokenId).send({ from: account });
+            location.reload();
+        });
+    }
+    
+    if (showPlaceBidPopupBtn) {
+        showPlaceBidPopupBtn.addEventListener("click", () => {
+            document.getElementById("placeBidPopup").style.display = "flex";
+            document.getElementById("sealedbid-popup-title").innerText = "Place Sealed Bid";
+            document.getElementById("confirm-sealedbid-commit").style.display = "block";
+            document.getElementById("confirm-sealedbid-reveal").style.display = "none";
+        });
+    }
+
+    if (showRevealBidPopupBtn) {
+        showRevealBidPopupBtn.addEventListener("click", () => {
+            document.getElementById("placeBidPopup").style.display = "flex";
+            document.getElementById("sealedbid-popup-title").innerText = "Reveal Your Bid";
+            document.getElementById("confirm-sealedbid-commit").style.display = "none";
+            document.getElementById("confirm-sealedbid-reveal").style.display = "block";
+        });
+    }
+
+    // --- Begin: Sealed Bid Popup Event Listeners ---
+    const commitBtn = document.getElementById("confirm-sealedbid-commit");
+    const revealBtn = document.getElementById("confirm-sealedbid-reveal");
+    const popupStatus = document.getElementById("sealedbid-popup-status");
+    const closePopup = () => {
+        document.getElementById("placeBidPopup").style.display = "none";
+        popupStatus.innerText = "";
+        popupStatus.style.color = "";
+    };
+    document.getElementById("close-bid-popup").onclick = closePopup;
+
+    if (commitBtn) {
+        commitBtn.addEventListener("click", async () => {
+            const bidAmountEth = document.getElementById("sealedbid-bid-amount").value;
+            const secret = document.getElementById("sealedbid-secret").value;
+
+            if (!bidAmountEth || !secret) {
+                popupStatus.innerText = "⚠️ Please enter bid amount and secret.";
+                popupStatus.style.color = "red";
+                return;
+            }
+
+            const bidAmountWei = Web3.utils.toWei(bidAmountEth, "ether");
+            const hash = Web3.utils.soliditySha3({ t: "uint256", v: bidAmountWei }, { t: "string", v: secret }, { t: "uint256", v: tokenId });
+
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                const account = accounts[0];
+
+                const estimatedGas = await sealedBidContract.methods.commitBid(tokenId, hash).estimateGas({ from: account });
+                await sealedBidContract.methods.commitBid(tokenId, hash).send({
+                    from: account,
+                    gas: estimatedGas + 1000n
+                });
+
+                popupStatus.innerText = "✅ Bid committed successfully!";
+                popupStatus.style.color = "green";
+                setTimeout(() => {
+                    document.getElementById("placeBidPopup").style.display = "none";
+                    location.reload();
+                }, 2000);
+            } catch (err) {
+                console.error("Commit failed", err);
+                if (err.data && err.data.data && err.data.data.message) {
+                    popupStatus.innerText = "❌ " + err.data.data.message;  
+                    popupStatus.style.color = "red";
+                } else {
+                    popupStatus.innerText = "❌ " + err.message;  
+                    popupStatus.style.color = "red";
+                }
+            }
+        });
+    }
+
+    if (revealBtn) {
+        revealBtn.addEventListener("click", async () => {
+            const bidAmountEth = document.getElementById("sealedbid-bid-amount").value;
+            const secret = document.getElementById("sealedbid-secret").value;
+
+            if (!bidAmountEth || !secret) {
+                popupStatus.innerText = "⚠️ Please enter bid amount and secret.";
+                popupStatus.style.color = "red";
+                return;
+            }
+
+            const bidAmountWei = Web3.utils.toWei(bidAmountEth, "ether");
+
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                const account = accounts[0];
+
+                const estimatedGas = await sealedBidContract.methods.revealBid(tokenId, bidAmountWei, secret).estimateGas({
+                    from: account,
+                    value: bidAmountWei
+                });
+
+                await sealedBidContract.methods.revealBid(tokenId, bidAmountWei, secret).send({
+                    from: account,
+                    value: bidAmountWei,
+                    gas: estimatedGas + 1000n
+                });
+
+                popupStatus.innerText = "✅ Bid revealed successfully!";
+                popupStatus.style.color = "green";
+                setTimeout(() => {
+                    document.getElementById("placeBidPopup").style.display = "none";
+                    location.reload();
+                }, 2000);
+            } catch (err) {
+                console.error("Reveal failed", err);
+                popupStatus.innerText = "❌ " + err.data.data.message;
+                popupStatus.style.color = "red";
+            }
+        });
+    }
+    // --- End: Sealed Bid Popup Event Listeners ---
 }
 
 
@@ -692,7 +888,8 @@ function showApprovalPopup(isFromListing = false, isFromAuction = false) {
                 contractAddresses.fixedContractAddress,
                 contractAddresses.auctionContractAddress,
                 contractAddresses.dutchContractAddress,
-                contractAddresses.offerContractAddress
+                contractAddresses.offerContractAddress,
+                contractAddresses.sealedBidContractAddress
             ], tokenId).send({ from: userAddress });
             updateStatus("✅ Single NFT approved!");
             setTimeout(cleanup, 2000);
@@ -708,7 +905,8 @@ function showApprovalPopup(isFromListing = false, isFromAuction = false) {
                 contractAddresses.fixedContractAddress,
                 contractAddresses.auctionContractAddress,
                 contractAddresses.dutchContractAddress,
-                contractAddresses.offerContractAddress
+                contractAddresses.offerContractAddress,
+                contractAddresses.sealedBidContractAddress
             ], true).send({ from: userAddress });
             updateStatus("✅ All NFTs approved!");
             setTimeout(cleanup, 2000);

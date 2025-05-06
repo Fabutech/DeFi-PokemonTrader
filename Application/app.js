@@ -25,6 +25,7 @@ export async function runApp(DB, tradingContractAddress, nftContractAddress, ABI
         tradingContract: tradingContract,
         auctionContract: new ethers.Contract(await tradingContract.auction(), ABIS.auctionABI.abi, provider),
         dutchContract: new ethers.Contract(await tradingContract.dutchAuction(), ABIS.dutchABI.abi, provider),
+        sealedBidContract: new ethers.Contract(await tradingContract.sealedBidAuction(), ABIS.sealedBidABI.abi, provider),
         fixedContract: new ethers.Contract(await tradingContract.fixedPrice(), ABIS.fixedABI.abi, provider),
         offerContract: new ethers.Contract(await tradingContract.offerManager(), ABIS.offerABI.abi, provider)
     }

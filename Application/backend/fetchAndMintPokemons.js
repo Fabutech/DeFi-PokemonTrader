@@ -13,6 +13,7 @@ const ABIS = {
   tradingABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/TradingContract.sol/TradingContract.json", "utf8")),
   auctionABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/AuctionMarketplace.sol/AuctionMarketplace.json", "utf8")),
   dutchABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/DutchAuctionMarketplace.sol/DutchAuctionMarketplace.json", "utf8")),
+  sealedBidABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/SealedBidAuctionMarketplace.sol/SealedBidAuctionMarketplace.json", "utf8")),
   fixedABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/FixedPriceMarketplace.sol/FixedPriceMarketplace.json", "utf8")),
   offerABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/OfferManager.sol/OfferManager.json", "utf8"))
 }
