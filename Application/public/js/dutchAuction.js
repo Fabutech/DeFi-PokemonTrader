@@ -6,7 +6,7 @@
  * @param {string|number} endTimeStampStr - The auction end time (UNIX timestamp in seconds).
  * @param {number} ethToUsdRate - The current ETH to USD exchange rate.
  *****************************************************/
-async function updateDutchAuctionPrice(tradingContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, ethToUsdRate) {
+async function updateDutchAuctionPrice(startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, ethToUsdRate) {
     const ethElement = document.getElementById("dutch-auction-currentPrice-eth");
     const usdElement = document.getElementById("dutch-auction-currentPrice-usd");
     const buyBtn = document.getElementById("buy-from-dutch-auction");
@@ -17,16 +17,19 @@ async function updateDutchAuctionPrice(tradingContract, startPriceEth, endPriceE
         const currentTime = Math.floor(Date.now() / 1000);
 
         const startPrice = parseFloat(Web3.utils.fromWei(startPriceEth.toString(), 'ether'));
+        const endPrice = parseFloat(Web3.utils.fromWei(endPriceEth.toString(), 'ether'));
 
         let currentPrice = startPrice;
 
-        if (currentTime < endTime && currentTime > startTime) {
-            const currentPriceWeigh = await tradingContract.methods.getCurrentDutchPrice(tokenId).call();
-            currentPrice = parseFloat(Web3.utils.fromWei(currentPriceWeigh.toString(), 'ether'))
+        if (currentTime < endTime && currentTime >= startTime) {
+            const priceDiff = startPrice - endPrice;
+            const duration = endTime - startTime;
+            const elapsed = currentTime - startTime;
+            currentPrice = startPrice - (priceDiff * elapsed / duration);
         } else if (currentTime >= endTime) {
-            ethElement.textContent = `-`;
-            usdElement.textContent = `-`;
-            return
+            currentPrice = endPrice;
+        } else {
+            currentPrice = startPrice;
         }
 
         ethElement.textContent = `${parseFloat(currentPrice).toFixed(4).replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.0+$/, '.0')} ETH`;
@@ -50,9 +53,6 @@ async function updateDutchAuctionPrice(tradingContract, startPriceEth, endPriceE
  * @param {string|number} endTimeStampStr - The auction end time (UNIX timestamp in seconds).
  *****************************************************/
 function startDutchAuctionPriceUpdater(startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr) {
-    const web3 = new Web3(window.ethereum);
-    const dutchContract = new web3.eth.Contract(ABIS.dutchABI.abi, contractAddresses.dutchContractAddress);
-
     const ethElement = document.getElementById("dutch-auction-currentPrice-eth");
     if (!ethElement) return;
 
@@ -61,16 +61,16 @@ function startDutchAuctionPriceUpdater(startPriceEth, endPriceEth, startTimeStam
         .then(data => {
             const rate = data.ethereum.usd;
 
-            updateDutchAuctionPrice(dutchContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, rate);
+            updateDutchAuctionPrice(startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, rate);
             setInterval(() => {
-                updateDutchAuctionPrice(dutchContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, rate);
+                updateDutchAuctionPrice(startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, rate);
             }, 1000);
         })
         .catch(err => {
             console.error("Failed to fetch ETH price:", err);
-            updateDutchAuctionPrice(dutchContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, null);
+            updateDutchAuctionPrice(startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, null);
             setInterval(() => {
-                updateDutchAuctionPrice(dutchContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, null);
+                updateDutchAuctionPrice(startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, null);
             }, 1000);
         });
 }

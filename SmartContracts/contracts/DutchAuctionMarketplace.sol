@@ -1,5 +1,3 @@
-
-
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
@@ -59,16 +57,17 @@ contract DutchAuctionMarketplace {
         emit DutchAuctionStarted(tokenId, msg.sender, startPrice, endPrice, endTime);
     }
 
-    function buyFromDutchAuction(uint256 tokenId) external payable {
+    function buyFromDutchAuction(uint256 tokenId, uint256 clientTimestamp) external payable {
         DutchAuction storage auction = dutchAuctions[tokenId];
         require(auction.isActive, "Dutch auction not active");
-        require(block.timestamp <= auction.endTimestamp, "Auction expired");
+        require(clientTimestamp <= block.timestamp + 60, "Timestamp too far in the future"); // + 60 seconds are needed, since not every second a new block is mined in the local hardhat testnet and thus without a margin a clientTimestamp could be declared as in the future
+        require(clientTimestamp <= auction.endTimestamp, "Auction expired");
 
-        uint256 elapsed = block.timestamp - auction.startTimestamp;
+        uint256 elapsed = clientTimestamp - auction.startTimestamp;
         uint256 duration = auction.endTimestamp - auction.startTimestamp;
         uint256 priceDiff = auction.startPrice - auction.endPrice;
         uint256 currentPrice = auction.startPrice - (priceDiff * elapsed / duration);
-        if (block.timestamp >= auction.endTimestamp) {
+        if (clientTimestamp >= auction.endTimestamp) {
             currentPrice = auction.endPrice;
         }
 
