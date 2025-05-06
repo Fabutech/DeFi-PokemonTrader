@@ -8,8 +8,14 @@ import { runApp} from "../app.js";
 const ownerAddress = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 
 // ABIs
-const ERC721_JSON = JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/ERC721.sol/ERC721.json", "utf8"));
-const TRADING_JSON = JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/TradingContract.sol/TradingContract.json", "utf8"));
+const ABIS = {
+  erc721ABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/ERC721.sol/ERC721.json", "utf8")),
+  tradingABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/TradingContract.sol/TradingContract.json", "utf8")),
+  auctionABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/AuctionMarketplace.sol/AuctionMarketplace.json", "utf8")),
+  dutchABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/DutchAuctionMarketplace.sol/DutchAuctionMarketplace.json", "utf8")),
+  fixedABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/FixedPriceMarketplace.sol/FixedPriceMarketplace.json", "utf8")),
+  offerABI: JSON.parse(fs.readFileSync("../../SmartContracts/artifacts/contracts/OfferManager.sol/OfferManager.json", "utf8"))
+}
 
 // MongoDB Setup
 const nftOwnershipSchema = new mongoose.Schema({
@@ -38,7 +44,7 @@ const DB = {
 
 async function deployNFTContract(signer) {    
   // Deploy the contract
-  const NFTContract = new ethers.ContractFactory(ERC721_JSON.abi, ERC721_JSON.bytecode, signer);
+  const NFTContract = new ethers.ContractFactory(ABIS.erc721ABI.abi, ABIS.erc721ABI.bytecode, signer);
   const nftContract = await NFTContract.deploy("PokeNFT", "PKN");
   await nftContract.waitForDeployment(); // Wait for deployment
     
@@ -46,7 +52,7 @@ async function deployNFTContract(signer) {
 }
 
 async function deployTradingContract(signer, nftContractAddress) {
-  const TradingContract = new ethers.ContractFactory(TRADING_JSON.abi, TRADING_JSON.bytecode, signer);
+  const TradingContract = new ethers.ContractFactory(ABIS.tradingABI.abi, ABIS.tradingABI.bytecode, signer);
   const tradingContract = await TradingContract.deploy(nftContractAddress);
   await tradingContract.waitForDeployment();
   
@@ -85,16 +91,15 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
   connectMongoDB();
 
   console.log(`${time()} Starting to setup contract event listener`);
-  await setupEventListener(DB, await nftContract.getAddress(), ERC721_JSON.abi, await tradingContract.getAddress(), TRADING_JSON.abi, true);
+  await setupEventListener(DB, await nftContract.getAddress(), await tradingContract.getAddress(), ABIS, true);
   console.log(`${time()} ✅ Successfully setup event listener`);
 
   console.log(`${time()} Deploying Frontend website...`);
   runApp(
     DB,
-    tradingContract, 
-    TRADING_JSON.abi, 
-    nftContract, 
-    ERC721_JSON.abi,
+    await tradingContract.getAddress(),
+    await nftContract.getAddress(),
+    ABIS,
     signer
   );
   console.log(`${time()} ✅ Successfully deployed website at: localhost:3000`);

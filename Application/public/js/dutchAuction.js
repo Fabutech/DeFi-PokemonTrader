@@ -51,7 +51,7 @@ async function updateDutchAuctionPrice(tradingContract, startPriceEth, endPriceE
  *****************************************************/
 function startDutchAuctionPriceUpdater(startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr) {
     const web3 = new Web3(window.ethereum);
-    const tradingContract = new web3.eth.Contract(tradingABI, tradingAddress);
+    const dutchContract = new web3.eth.Contract(ABIS.dutchABI.abi, contractAddresses.dutchContractAddress);
 
     const ethElement = document.getElementById("dutch-auction-currentPrice-eth");
     if (!ethElement) return;
@@ -61,16 +61,16 @@ function startDutchAuctionPriceUpdater(startPriceEth, endPriceEth, startTimeStam
         .then(data => {
             const rate = data.ethereum.usd;
 
-            updateDutchAuctionPrice(tradingContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, rate);
+            updateDutchAuctionPrice(dutchContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, rate);
             setInterval(() => {
-                updateDutchAuctionPrice(tradingContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, rate);
+                updateDutchAuctionPrice(dutchContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, rate);
             }, 1000);
         })
         .catch(err => {
             console.error("Failed to fetch ETH price:", err);
-            updateDutchAuctionPrice(tradingContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, null);
+            updateDutchAuctionPrice(dutchContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, null);
             setInterval(() => {
-                updateDutchAuctionPrice(tradingContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, null);
+                updateDutchAuctionPrice(dutchContract, startPriceEth, endPriceEth, startTimeStampStr, endTimeStampStr, null);
             }, 1000);
         });
 }

@@ -2,12 +2,12 @@ import { ethers } from "ethers";
 import { TextDecoder } from 'util';
 import { unixfs } from "@helia/unixfs";
 
-export default async function getMarketplace(req, res, DB, tradingContract, nftContract, signer, helia) {
+export default async function getMarketplace(req, res, DB, CONTRACTS, signer, helia) {
     const decoder = new TextDecoder();
     const fs = unixfs(helia);
 
     const userAddress = req.session.walletAddress;
-    const contractOwner = await nftContract.connect(signer).contractOwner();
+    const contractOwner = await CONTRACTS.nftContract.connect(signer).contractOwner();
 
     const allNFTs = await DB.ownership.find({});
 
@@ -20,10 +20,10 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
     await Promise.all(allNFTs.map(async nft => {
         try {
             const [listing, auction, offers, tokenUri] = await Promise.all([
-                tradingContract.connect(signer).listings(nft.tokenId),
-                tradingContract.connect(signer).auctions(nft.tokenId),
-                tradingContract.connect(signer).getOffers(nft.tokenId),
-                nftContract.connect(signer).tokenURI(nft.tokenId)
+                CONTRACTS.fixedContract.connect(signer).listings(nft.tokenId),
+                CONTRACTS.auctionContract.connect(signer).auctions(nft.tokenId),
+                CONTRACTS.offerContract.connect(signer).getOffers(nft.tokenId),
+                CONTRACTS.nftContract.connect(signer).tokenURI(nft.tokenId)
             ]);
             const ipfsHash = tokenUri.replace("ipfs://", "");
 

@@ -233,7 +233,7 @@
   <%- include("popups/auctionPopup") -%>
 
   <!-- Place Bid Popup -->
-  <%- include("popups/placeBidPopup") -%>
+  <%- include("popups/placeBidPopup", { isRevealPhase: false }) -%>
 
   <!-- Offer Popup -->
   <%- include("popups/offerPopup") -%>
@@ -241,12 +241,10 @@
   <!-- Scripts -->
   <script>
     const tokenId = "<%= nft.tokenId %>";
-    const tradingAddress = "<%= tradingContractAddress %>";
-    const tradingABI = JSON.parse(`<%- JSON.stringify(tradingContractABI) %>`);
-    
     const userAddress = "<%= nft.owner %>";
-    const nftContractAddress = "<%= nftContractAddress %>";
-    const nftContractABI = JSON.parse(`<%- JSON.stringify(nftContractABI) %>`); 
+
+    const contractAddresses = JSON.parse(`<%- JSON.stringify(contractAddresses) %>`);
+    const ABIS = JSON.parse(`<%- JSON.stringify(ABIS) %>`);
 
     loadTransactionHistory("single");
     loadTokenOffers("<%= isOwner %>");

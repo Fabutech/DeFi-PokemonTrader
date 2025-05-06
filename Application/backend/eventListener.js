@@ -1,9 +1,9 @@
-import { ethers, Interface } from 'ethers';
+import { ethers } from 'ethers';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: "../.env"});
 
-export async function setupEventListener(DB, nftContractAddress, nftContractABI, tradingContractAddress, tradingContractABI, wipeDB = false) {    
+export async function setupEventListener(DB, nftContractAddress, tradingContractAddress, ABIS, wipeDB = false) {    
     // Wipe the NFTOwnership collection
     if (wipeDB) {
       await DB.ownership.deleteMany({})
@@ -21,10 +21,13 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
     // Set up Ethers.js provider to connect to local Hardhat network
     const provider = new ethers.JsonRpcProvider('http://localhost:8545');
     
-    const nftIface = new Interface(nftContractABI);
-    const nftContract = new ethers.Contract(nftContractAddress, nftIface, provider);
-    const tradingIface = new Interface(tradingContractABI);
-    const tradingContract = new ethers.Contract(tradingContractAddress, tradingIface, provider);
+    const nftContract = new ethers.Contract(nftContractAddress, ABIS.erc721ABI.abi, provider);
+    const tradingContract = new ethers.Contract(tradingContractAddress, ABIS.tradingABI.abi, provider);
+
+    const auctionContract = new ethers.Contract(await tradingContract.auction(), ABIS.auctionABI.abi, provider);
+    const dutchContract = new ethers.Contract(await tradingContract.dutchAuction(), ABIS.dutchABI.abi, provider);
+    const fixedContract = new ethers.Contract(await tradingContract.fixedPrice(), ABIS.fixedABI.abi, provider);
+    const offerContract = new ethers.Contract(await tradingContract.offerManager(), ABIS.offerABI.abi, provider);
 
     try {
         // ********************** TRANSFER EVENTS OF NFT-CONTRACT **********************
@@ -64,7 +67,7 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
         });
     
         // ********************** LISTING EVENTS **********************
-        tradingContract.on('NFTListed', async (tokenId, seller, price, event) => {
+        fixedContract.on('NFTListed', async (tokenId, seller, price, event) => {
             await saveEvent('List', {
                 tokenId: tokenId.toString(),
                 from: seller.toLowerCase(),
@@ -73,7 +76,7 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
             await DB.ownership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: true, lastUpdated: Date.now() });
         });
     
-        tradingContract.on('NFTSold', async (tokenId, seller, buyer, price, event) => {
+        fixedContract.on('NFTSold', async (tokenId, seller, buyer, price, event) => {
             await saveEvent('Sale', {
                 tokenId: tokenId.toString(),
                 from: seller.toLowerCase(),
@@ -83,7 +86,7 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
             await DB.ownership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, currentValue: parseFloat(ethers.formatEther(price)), lastUpdated: Date.now() });
         });
 
-        tradingContract.on('NFTDelisted', async (tokenId, seller, event) => {
+        fixedContract.on('NFTDelisted', async (tokenId, seller, event) => {
             await saveEvent('Delist', {
                 tokenId: tokenId.toString(),
                 from: seller.toLowerCase()
@@ -93,7 +96,7 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
     
 
         // ********************** AUCTION EVENTS **********************
-        tradingContract.on('AuctionStarted', async (tokenId, seller, startPrice, endTime, event) => {
+        auctionContract.on('AuctionStarted', async (tokenId, seller, startPrice, endTime, event) => {
             await saveEvent('AuctionStarted', {
                 tokenId: tokenId.toString(),
                 from: seller.toLowerCase(),
@@ -102,7 +105,7 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
             await DB.ownership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: true, lastUpdated: Date.now() });
         });
     
-        tradingContract.on('NewBid', async (tokenId, bidder, amount, event) => {
+        auctionContract.on('NewBid', async (tokenId, bidder, amount, event) => {
             await saveEvent('NewBid', {
                 tokenId: tokenId.toString(),
                 from: bidder.toLowerCase(),
@@ -110,7 +113,7 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
             });
         });
 
-        tradingContract.on('BidWithdrawn', async (tokenId, bidder, amount, event) => {
+        auctionContract.on('BidWithdrawn', async (tokenId, bidder, amount, event) => {
             await saveEvent('BidWithdrawn', {
                 tokenId: tokenId.toString(),
                 from: bidder.toLowerCase(),
@@ -118,7 +121,7 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
             });
         });
     
-        tradingContract.on('AuctionEnded', async (tokenId, winner, amount, event) => {
+        auctionContract.on('AuctionEnded', async (tokenId, winner, amount, event) => {
             await saveEvent('AuctionEnded', {
                 tokenId: tokenId.toString(),
                 to: winner.toLowerCase(),
@@ -129,25 +132,25 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
 
 
         // ********************** DUTCH-AUCTION EVENTS **********************
-        tradingContract.on('DutchAuctionStarted', async (tokenId, seller, startPrice, endPrice, endTime, event) => {
+        dutchContract.on('DutchAuctionStarted', async (tokenId, seller, startPrice, endPrice, endTime, event) => {
             await saveEvent('DutchAuctionStarted', {
                 tokenId: tokenId.toString(),
                 from: seller.toLowerCase(),
                 price: ethers.formatEther(startPrice)
             });
-            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, {
+            await DB.ownership.findOneAndUpdate({ tokenId: tokenId.toString() }, {
                 currentlyForSale: true,
                 lastUpdated: Date.now()
             });
         });
 
-        tradingContract.on('DutchAuctionEnded', async (tokenId, buyer, amount, event) => {
+        dutchContract.on('DutchAuctionEnded', async (tokenId, buyer, amount, event) => {
             await saveEvent('DutchAuctionEnded', {
                 tokenId: tokenId.toString(),
                 to: buyer.toLowerCase(),
                 price: ethers.formatEther(amount)
             });
-            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, {
+            await DB.ownership.findOneAndUpdate({ tokenId: tokenId.toString() }, {
                 currentlyForSale: false,
                 currentValue: parseFloat(ethers.formatEther(amount)),
                 lastUpdated: Date.now()
@@ -156,7 +159,7 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
 
 
         // ********************** OFFER EVENTS **********************
-        tradingContract.on('OfferMade', async (tokenId, offerer, amount, expiration, event) => {
+        offerContract.on('OfferMade', async (tokenId, offerer, amount, expiration, event) => {
             await saveEvent('OfferMade', {
                 tokenId: tokenId.toString(),
                 from: offerer.toLowerCase(),
@@ -164,14 +167,14 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
             });
         });
 
-        tradingContract.on('OfferCancelled', async (tokenId, offerer, event) => {
+        offerContract.on('OfferCancelled', async (tokenId, offerer, event) => {
             await saveEvent('OfferCancelled', {
                 tokenId: tokenId.toString(),
                 from: offerer.toLowerCase()
             });
         });
 
-        tradingContract.on('OfferAccepted', async (tokenId, offerer, amount, event) => {
+        offerContract.on('OfferAccepted', async (tokenId, offerer, amount, event) => {
             await saveEvent('OfferAccepted', {
                 tokenId: tokenId.toString(),
                 to: offerer.toLowerCase(),
