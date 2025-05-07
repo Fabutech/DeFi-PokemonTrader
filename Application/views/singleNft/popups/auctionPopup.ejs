@@ -9,9 +9,8 @@
 
       <!-- Tab navigation -->
       <div class="popup-tabs" style="margin-top: 20px;">
-        <button class="popup-tab active" data-target="regular-auction-section">Regular Auction</button>
-        <button class="popup-tab" data-target="dutch-auction-section">Dutch Auction</button>
-        <button class="popup-tab" data-target="sealedbid-auction-section">Sealed-Bid Auction</button>
+        <button class="popup-tab active">Regular Auction</button>
+        <button id="tab-dutch" class="popup-tab">Dutch Auction</button>
       </div>
       
       <div class="popup-field">
@@ -43,9 +42,8 @@
 
       <!-- Tab navigation -->
       <div class="popup-tabs" style="margin-top: 20px;">
-        <button class="popup-tab" data-target="regular-auction-section">Regular Auction</button>
-        <button class="popup-tab active" data-target="dutch-auction-section">Dutch Auction</button>
-        <button class="popup-tab" data-target="sealedbid-auction-section">Sealed-Bid Auction</button>
+        <button id="tab-regular" class="popup-tab">Regular Auction</button>
+        <button class="popup-tab active">Dutch Auction</button>
       </div>
 
       <div class="popup-field">
@@ -74,52 +72,20 @@
 
       <div id="start-dutch-auction-status" style="margin-top: 10px; font-weight: bold;"></div>
     </div>
-
-    <!-- Sealed-Bid Auction Section -->
-    <div id="sealedbid-auction-section" style="display: none;">
-      <h2>List your NFT for sealed-bid auction</h2>
-      <p>Buyers will submit secret bids. After the auction ends, they can reveal them.</p>
-
-      <!-- Tab navigation -->
-      <div class="popup-tabs" style="margin-top: 20px;">
-        <button class="popup-tab" data-target="regular-auction-section">Regular Auction</button>
-        <button class="popup-tab" data-target="dutch-auction-section">Dutch Auction</button>
-        <button class="popup-tab active" data-target="sealedbid-auction-section">Sealed-Bid Auction</button>
-      </div>
-
-      <div class="popup-field">
-        <label for="sealedbid-start-price"><strong>Starting Price (ETH):</strong></label>
-        <input type="number" id="sealedbid-start-price" placeholder="e.g. 0.5" min="0" step="0.01" />
-      </div>
-
-      <div class="popup-field">
-        <label for="sealedbid-end-date"><strong>End Date:</strong></label>
-        <input type="date" id="sealedbid-end-date" />
-      </div>
-
-      <div class="popup-field">
-        <label for="sealedbid-end-time"><strong>End Time:</strong></label>
-        <input type="time" id="sealedbid-end-time" />
-      </div>
-
-      <div class="popup-buttons" style="margin-top: 15px;">
-        <button id="confirm-sealedbid-auction-start" class="blue-btn">Start sealed-bid auction</button>
-      </div>
-
-      <div id="start-sealedbid-auction-status" style="margin-top: 10px; font-weight: bold;"></div>
-    </div>
   </div>
     <script>
-      document.querySelectorAll('.popup-tab').forEach(tab => {
-        tab.addEventListener('click', function () {
-          // Hide all sections
-          ['regular-auction-section', 'dutch-auction-section', 'sealedbid-auction-section'].forEach(id => {
-            document.getElementById(id).style.display = 'none';
-          });
-          // Activate the clicked tab and show its section
-          const target = this.getAttribute('data-target');
-          document.getElementById(target).style.display = 'block';
-        });
+      document.getElementById('tab-regular').addEventListener('click', function() {
+        document.getElementById('regular-auction-section').style.display = 'block';
+        document.getElementById('dutch-auction-section').style.display = 'none';
+        this.classList.add('active');
+        document.getElementById('tab-dutch').classList.remove('active');
+      });
+
+      document.getElementById('tab-dutch').addEventListener('click', function() {
+        document.getElementById('regular-auction-section').style.display = 'none';
+        document.getElementById('dutch-auction-section').style.display = 'block';
+        this.classList.add('active');
+        document.getElementById('tab-regular').classList.remove('active');
       });
     </script>
 </div>

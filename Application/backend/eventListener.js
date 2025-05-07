@@ -26,7 +26,6 @@ export async function setupEventListener(DB, nftContractAddress, tradingContract
 
     const auctionContract = new ethers.Contract(await tradingContract.auction(), ABIS.auctionABI.abi, provider);
     const dutchContract = new ethers.Contract(await tradingContract.dutchAuction(), ABIS.dutchABI.abi, provider);
-    const sealedBidContract = new ethers.Contract(await tradingContract.sealedBidAuction(), ABIS.sealedBidABI.abi, provider);
     const fixedContract = new ethers.Contract(await tradingContract.fixedPrice(), ABIS.fixedABI.abi, provider);
     const offerContract = new ethers.Contract(await tradingContract.offerManager(), ABIS.offerABI.abi, provider);
 
@@ -158,40 +157,6 @@ export async function setupEventListener(DB, nftContractAddress, tradingContract
             });
         });
 
-        // ********************** SEALED-BID AUCTION EVENTS **********************
-        sealedBidContract.on('AuctionStarted', async (tokenId, seller, startPrice, endTime, event) => {
-            await saveEvent('AuctionStarted', {
-                tokenId: tokenId.toString(),
-                from: seller.toLowerCase(),
-                price: ethers.formatEther(startPrice)
-            });
-            await DB.ownership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: true, lastUpdated: Date.now() });
-        });
-
-        sealedBidContract.on('NewBid', async (tokenId, bidder, amount, event) => {
-            await saveEvent('NewBid', {
-                tokenId: tokenId.toString(),
-                from: bidder.toLowerCase(),
-                price: ethers.formatEther(amount)
-            });
-        });
-
-        sealedBidContract.on('BidWithdrawn', async (tokenId, bidder, amount, event) => {
-            await saveEvent('BidWithdrawn', {
-                tokenId: tokenId.toString(),
-                from: bidder.toLowerCase(),
-                price: ethers.formatEther(amount)
-            });
-        });
-
-        sealedBidContract.on('AuctionEnded', async (tokenId, winner, amount, event) => {
-            await saveEvent('AuctionEnded', {
-                tokenId: tokenId.toString(),
-                to: winner.toLowerCase(),
-                price: ethers.formatEther(amount)
-            });
-            await DB.ownership.findOneAndUpdate({ tokenId: tokenId.toString() }, { currentlyForSale: false, currentValue: parseFloat(ethers.formatEther(amount)), lastUpdated: Date.now() });
-        });
 
         // ********************** OFFER EVENTS **********************
         offerContract.on('OfferMade', async (tokenId, offerer, amount, expiration, event) => {

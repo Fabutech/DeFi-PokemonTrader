@@ -6,7 +6,6 @@ import "./AuctionMarketplace.sol";
 import "./DutchAuctionMarketplace.sol";
 import "./FixedPriceMarketplace.sol";
 import "./OfferManager.sol";
-import "./SealedBidAuctionMarketplace.sol";
 
 contract TradingContract {
     ERC721 public nftContract;
@@ -16,7 +15,6 @@ contract TradingContract {
     DutchAuctionMarketplace public dutchAuction;
     FixedPriceMarketplace public fixedPrice;
     OfferManager public offerManager;
-    SealedBidAuctionMarketplace public sealedBidAuction;
 
     constructor(address _nftContract) {
         nftContract = ERC721(_nftContract);
@@ -25,6 +23,5 @@ contract TradingContract {
         dutchAuction = new DutchAuctionMarketplace(_nftContract);
         fixedPrice = new FixedPriceMarketplace(_nftContract);
         offerManager = new OfferManager(_nftContract);
-        sealedBidAuction = new SealedBidAuctionMarketplace(_nftContract);
     }
 }
