@@ -2,7 +2,7 @@ import express from 'express';
 
 import getMarketplace from './getMarketplace.js';
 
-export default function index(DB, tradingContract, nftContract, signer, helia) {
+export default function index(DB, tradingContract, tradingContractABI, nftContract, signer, helia) {
     const MainRouter = express.Router();
 
     MainRouter.route("/")
@@ -12,7 +12,7 @@ export default function index(DB, tradingContract, nftContract, signer, helia) {
 
     MainRouter.route("/marketplace")
     .get((req, res) => {
-        getMarketplace(req, res, DB, tradingContract, nftContract, signer, helia)
+        getMarketplace(req, res, DB, tradingContract, tradingContractABI, nftContract, signer, helia)
     })
 
     MainRouter.route("/transactions")

@@ -13,6 +13,9 @@
     <link rel="stylesheet" href="../css/marketplace.css">
     <link rel="stylesheet" href="../css/nftCardEffects.css">
 
+    <!-- Javascript Files -->
+    <script src="../js/web3/frontendEventlistener.js"></script>
+
     <!-- Boxicons CSS -->
     <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
 
@@ -78,6 +81,16 @@
     </div>
 
     <!--JavaScript-->
+    <script>
+        const tradingAddress = "<%= tradingContractAddress %>";
+        const tradingABI = JSON.parse(`<%- JSON.stringify(tradingContractABI) %>`);
+
+        // Wait until the page is fully loaded
+        setTimeout(() => {
+            setupFrontendEventListener();
+        }, 100);
+    </script>
+
     <script src="../js/navbar.js"></script>
     <script src="../js/web3/web3-utils.js"></script>
     <script src="../js/nftCardEffects.js"></script>

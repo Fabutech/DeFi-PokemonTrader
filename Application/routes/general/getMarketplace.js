@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { TextDecoder } from 'util';
 import { unixfs } from "@helia/unixfs";
 
-export default async function getMarketplace(req, res, DB, tradingContract, nftContract, signer, helia) {
+export default async function getMarketplace(req, res, DB, tradingContract, tradingContractABI, nftContract, signer, helia) {
     const decoder = new TextDecoder();
     const fs = unixfs(helia);
 
@@ -104,7 +104,9 @@ export default async function getMarketplace(req, res, DB, tradingContract, nftC
         listings: listedNfts, 
         auctions: nftsOnAuction,
         unlisted: unlistedNfts,
-        isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase()
+        isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase(),
+        tradingContractAddress: await tradingContract.getAddress(),
+        tradingContractABI: tradingContractABI,
     });
 }
 

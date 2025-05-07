@@ -7,5 +7,5 @@ export function routes(app, DB, tradingContract, tradingContractABI, nftContract
     app.use("/api", api(DB, tradingContract, signer, helia));
     app.use("/user", user(DB, nftContract, nftContractABI, tradingContract, tradingContractABI, signer, helia));
     app.use("/nft", nft(DB, tradingContract, tradingContractABI, nftContract, nftContractABI, signer, helia));
-    app.use("", general(DB, tradingContract, nftContract, signer, helia));
+    app.use("", general(DB, tradingContract, tradingContractABI, nftContract, signer, helia));
 }

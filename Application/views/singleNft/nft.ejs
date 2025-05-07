@@ -21,6 +21,7 @@
   <script src="../../js/web3/dutchAuctionHandler.js"></script>
   <script src="../../js/web3/listNftHandler.js"></script>
   <script src="../../js/web3/offerNftHandler.js"></script>
+  <script src="../../js/web3/frontendEventlistener.js"></script>
 
   <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
 
@@ -255,12 +256,14 @@
 
     startDutchAuctionPriceUpdater("<%= nft.isOnDutchAuction ? nft.dutchAuction.auction.startPrice : 0 %>", "<%= nft.isOnDutchAuction ? nft.dutchAuction.auction.endPrice : 0 %>", "<%= nft.isOnDutchAuction ?  nft.dutchAuction.auction.startTimestamp : 0 %>", "<%= nft.isOnDutchAuction ?  nft.dutchAuction.auction.endTimestamp : 0 %>")
 
+    // Wait until the page is fully loaded
     setTimeout(() => {
       setupListNFTHandler();
       setupBuyNFTHandler();
       setupOfferNFTHandler(); 
       setupAuctionNFTHandler();  
       setupDutchAuctionHandler();
+      setupFrontendEventListener();
     }, 100);
      
 
