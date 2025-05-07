@@ -630,11 +630,17 @@ function setupDutchAuctionHandler() {
                 console.log(price);
                 console.log(priceInEth);
 
-                const estimatedGas = await tradingContract.methods.buyFromDutchAuction(tokenId).estimateGas({ from: account, value: price });
-                await tradingContract.methods.buyFromDutchAuction(tokenId).send({
+                const currentTimestamp = Math.floor(Date.now() / 1000);
+                const estimatedGas = await tradingContract.methods.buyFromDutchAuction(tokenId, currentTimestamp).estimateGas({
                     from: account,
                     value: price
                 });
+                await tradingContract.methods.buyFromDutchAuction(tokenId, currentTimestamp).send({
+                    from: account,
+                    value: price,
+                    gas: estimatedGas + 1000n
+                });
+
 
                 showStatusMessage("✅ NFT purchased via Dutch auction!");
             } catch (err) {

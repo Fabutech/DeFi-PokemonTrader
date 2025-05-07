@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 dotenv.config({ path: "../.env"});
 
 export async function setupEventListener(DB, nftContractAddress, nftContractABI, tradingContractAddress, tradingContractABI, wipeDB = false) {    
-    // Wipe the NFTOwnership collection
     if (wipeDB) {
       await DB.ownership.deleteMany({})
         .catch((err) => {
@@ -135,7 +134,7 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
                 from: seller.toLowerCase(),
                 price: ethers.formatEther(startPrice)
             });
-            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, {
+            await DB.ownership.findOneAndUpdate({ tokenId: tokenId.toString() }, {
                 currentlyForSale: true,
                 lastUpdated: Date.now()
             });
@@ -147,7 +146,7 @@ export async function setupEventListener(DB, nftContractAddress, nftContractABI,
                 to: buyer.toLowerCase(),
                 price: ethers.formatEther(amount)
             });
-            await NFTOwnership.findOneAndUpdate({ tokenId: tokenId.toString() }, {
+            await DB.ownership.findOneAndUpdate({ tokenId: tokenId.toString() }, {
                 currentlyForSale: false,
                 currentValue: parseFloat(ethers.formatEther(amount)),
                 lastUpdated: Date.now()
