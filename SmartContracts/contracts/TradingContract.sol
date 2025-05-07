@@ -159,20 +159,22 @@ contract TradingContract is ReentrancyGuard, Pausable, Ownable {
         emit AuctionStarted(tokenId, msg.sender, startingPrice, endTimeStamp);
     }
 
-    function placeBid(uint256 tokenId) external payable isAuctionActive(tokenId) nonReentrant whenNotPaused {
-        require(block.timestamp < auctions[tokenId].endTimestamp, "Auction has ended");
-
+    function placeBid(uint256 tokenId) external payable isAuctionActive(tokenId) {
         Auction storage auction = auctions[tokenId];
-        require(msg.value >= auction.startingPrice, "Bid must be higher or equal than current highest");
-        require(msg.value > auction.highestBid, "Bid must be higher than current highest");
+        require(block.timestamp < auction.endTimestamp, "Auction ended");
+        require(msg.value > auction.highestBid, "Bid too low");
 
-        // Refund previous highest bidder
         if (auction.highestBid > 0) {
             pendingReturns[tokenId][auction.highestBidder] += auction.highestBid;
         }
 
         auction.highestBid = msg.value;
         auction.highestBidder = msg.sender;
+
+        // Extend if within last 2 minutes
+        if (auction.endTimestamp - block.timestamp <= 2 minutes) {
+            auction.endTimestamp += 2 minutes;
+        }
 
         emit NewBid(tokenId, msg.sender, msg.value);
     }
