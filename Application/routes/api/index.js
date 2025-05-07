@@ -2,7 +2,7 @@ import express from 'express';
 import { unixfs } from '@helia/unixfs';
 import { fromString } from 'uint8arrays/from-string';
 
-export default function index(DB, CONTRACTS, ABIS, signer, helia) {
+export default function index(DB, tradingContract, signer, helia) {
     const MainRouter = express.Router();
 
     const fs = unixfs(helia);
@@ -22,7 +22,7 @@ export default function index(DB, CONTRACTS, ABIS, signer, helia) {
         const limit = 100;
         const skip = page * limit;
 
-        const auctionData = await CONTRACTS.auctionContract.connect(signer).auctions(tokenId);
+        const auctionData = await tradingContract.connect(signer).auctions(tokenId);
         const auctionStartTime = Number(auctionData.startTimestamp.toString());
 
         // Convert auctionStartTime (seconds) to a JS Date
@@ -90,8 +90,8 @@ export default function index(DB, CONTRACTS, ABIS, signer, helia) {
     .get(async (req, res) => {
         const tokenId = req.params.tokenId;
 
-        let offers = await CONTRACTS.offerContract.connect(signer).getOffers(tokenId);
-        let listing = await CONTRACTS.fixedContract.connect(signer).listings(tokenId);
+        let offers = await tradingContract.connect(signer).getOffers(tokenId);
+        let listing = await tradingContract.connect(signer).listings(tokenId);
 
         const serializeBigInts = (obj) => JSON.parse(
             JSON.stringify(obj, (_, v) => (typeof v === "bigint" ? v.toString() : v))

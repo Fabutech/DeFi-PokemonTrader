@@ -2,10 +2,10 @@ import { ethers } from "ethers";
 import { TextDecoder } from 'util';
 import { unixfs } from "@helia/unixfs";
 
-export default async function getUserNFTs(req, res, DB, CONTRACTS, signer, helia) {
+export default async function getUserNFTs(req, res, DB, nftContract, signer, helia) {
     const userAddress = req.session.walletAddress;
 
-    const contractOwner = await CONTRACTS.nftContract.connect(signer).contractOwner();
+    const contractOwner = await nftContract.connect(signer).contractOwner();
 
     if (!userAddress) {
         return res.render("connect", { isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase() });
@@ -21,7 +21,7 @@ export default async function getUserNFTs(req, res, DB, CONTRACTS, signer, helia
 
     const nfts = await Promise.all(nftsFromDB.map(async (nft) => {
         try {
-            const tokenUri = await CONTRACTS.nftContract.connect(signer).tokenURI(nft.tokenId);
+            const tokenUri = await nftContract.connect(signer).tokenURI(nft.tokenId);
             const ipfsHash = tokenUri.replace("ipfs://", "");
     
             let content = '';

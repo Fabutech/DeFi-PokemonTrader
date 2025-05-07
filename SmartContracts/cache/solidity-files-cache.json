@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/fabutech/Documents/Projekte/DeFiApp/DeFiCode/SmartContracts/contracts/ERC721.sol": {
-      "lastModificationDate": 1746516458571,
-      "contentHash": "3631db1459fed7b720fd4138e0e09665",
+      "lastModificationDate": 1743421479094,
+      "contentHash": "010480f479353a0cad1a0e9717cd0989",
       "sourceName": "contracts/ERC721.sol",
       "solcConfig": {
         "version": "0.8.28",
@@ -76,8 +76,8 @@
       ]
     },
     "/Users/fabutech/Documents/Projekte/DeFiApp/DeFiCode/SmartContracts/contracts/TradingContract.sol": {
-      "lastModificationDate": 1746436559270,
-      "contentHash": "a58a76f01078f54e5366ec729ce510e8",
+      "lastModificationDate": 1746301725004,
+      "contentHash": "68ec8589b44023a4d27b320939fca380",
       "sourceName": "contracts/TradingContract.sol",
       "solcConfig": {
         "version": "0.8.28",
@@ -104,169 +104,13 @@
         }
       },
       "imports": [
-        "./ERC721.sol",
-        "./AuctionMarketplace.sol",
-        "./DutchAuctionMarketplace.sol",
-        "./FixedPriceMarketplace.sol",
-        "./OfferManager.sol"
+        "./ERC721.sol"
       ],
       "versionPragmas": [
         "^0.8.28"
       ],
       "artifacts": [
         "TradingContract"
-      ]
-    },
-    "/Users/fabutech/Documents/Projekte/DeFiApp/DeFiCode/SmartContracts/contracts/AuctionMarketplace.sol": {
-      "lastModificationDate": 1746519621148,
-      "contentHash": "2a8c7d48209e136aca0cd14890c82e78",
-      "sourceName": "contracts/AuctionMarketplace.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./ERC721.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.28"
-      ],
-      "artifacts": [
-        "AuctionMarketplace"
-      ]
-    },
-    "/Users/fabutech/Documents/Projekte/DeFiApp/DeFiCode/SmartContracts/contracts/DutchAuctionMarketplace.sol": {
-      "lastModificationDate": 1746516489156,
-      "contentHash": "525f51fc5ec879fc1a517295aa07d459",
-      "sourceName": "contracts/DutchAuctionMarketplace.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./ERC721.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.28"
-      ],
-      "artifacts": [
-        "DutchAuctionMarketplace"
-      ]
-    },
-    "/Users/fabutech/Documents/Projekte/DeFiApp/DeFiCode/SmartContracts/contracts/FixedPriceMarketplace.sol": {
-      "lastModificationDate": 1746516478697,
-      "contentHash": "5a11a5d091a2e79bfd7d8cfb4a34cebd",
-      "sourceName": "contracts/FixedPriceMarketplace.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./ERC721.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.28"
-      ],
-      "artifacts": [
-        "FixedPriceMarketplace"
-      ]
-    },
-    "/Users/fabutech/Documents/Projekte/DeFiApp/DeFiCode/SmartContracts/contracts/OfferManager.sol": {
-      "lastModificationDate": 1746516518001,
-      "contentHash": "98d2cbaa66fe7909e3b40684081765a8",
-      "sourceName": "contracts/OfferManager.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./ERC721.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.28"
-      ],
-      "artifacts": [
-        "OfferManager"
       ]
     }
   }

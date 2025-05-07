@@ -2,7 +2,7 @@ import express from 'express';
 
 import getMarketplace from './getMarketplace.js';
 
-export default function index(DB, CONTRACTS, ABIS, signer, helia) {
+export default function index(DB, tradingContract, nftContract, signer, helia) {
     const MainRouter = express.Router();
 
     MainRouter.route("/")
@@ -12,13 +12,13 @@ export default function index(DB, CONTRACTS, ABIS, signer, helia) {
 
     MainRouter.route("/marketplace")
     .get((req, res) => {
-        getMarketplace(req, res, DB, CONTRACTS, signer, helia)
+        getMarketplace(req, res, DB, tradingContract, nftContract, signer, helia)
     })
 
     MainRouter.route("/transactions")
     .get(async (req, res) => {
         const userAddress = req.session.walletAddress;
-        const contractOwner = await CONTRACTS.nftContract.connect(signer).contractOwner();
+        const contractOwner = await nftContract.connect(signer).contractOwner();
 
         res.render("transactions", {isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase()});
     })

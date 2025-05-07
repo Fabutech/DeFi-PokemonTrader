@@ -2,25 +2,25 @@ import { ethers } from "ethers";
 import { TextDecoder } from 'util';
 import { unixfs } from "@helia/unixfs";
 
-export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
+export default async function getNft(req, res, tradingContract, tradingContractABI, nftContract, nftContractABI, signer, helia) {
     const tokenId = req.params.tokenId;
     const userAddress = req.session.walletAddress;
 
-    const contractOwner = await CONTRACTS.nftContract.connect(signer).contractOwner();
+    const contractOwner = await nftContract.connect(signer).contractOwner();
 
-    const tokenUri = await CONTRACTS.nftContract.connect(signer).tokenURI(tokenId);
-    const tokenOwner = await CONTRACTS.nftContract.connect(signer).ownerOf(tokenId);
+    const tokenUri = await nftContract.connect(signer).tokenURI(tokenId);
+    const tokenOwner = await nftContract.connect(signer).ownerOf(tokenId);
 
     const isOwner = userAddress == tokenOwner.toLowerCase();
 
     let hasActiveOffer = false;
     if (userAddress) {
-        const offer = await CONTRACTS.offerContract.connect(signer).offers(tokenId, userAddress);
+        const offer = await tradingContract.connect(signer).offers(tokenId, userAddress);
         hasActiveOffer = offer.amount > 0;
     }
 
     let nftPriceUSD;
-    let listing = await CONTRACTS.fixedContract.connect(signer).listings(tokenId);
+    let listing = await tradingContract.connect(signer).listings(tokenId);
     if (listing.isActive === false) {
         listing = null;
         nftPriceUSD = null;
@@ -35,7 +35,7 @@ export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
         }
     }
 
-    const auctionData = await CONTRACTS.auctionContract.connect(signer).auctions(tokenId);
+    const auctionData = await tradingContract.connect(signer).auctions(tokenId);
     let auction = null;
     if (!listing && auctionData.isActive) {
         let startingPriceUSD, highestBidUSD;
@@ -61,7 +61,7 @@ export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
         }
     }
 
-    const dutchAuctionData = await CONTRACTS.dutchContract.connect(signer).dutchAuctions(tokenId);
+    const dutchAuctionData = await tradingContract.connect(signer).dutchAuctions(tokenId);
     let dutchAuction = null;
     if (!listing && !auctionData.isActive && dutchAuctionData.isActive) {
         let startPriceUSD, endPriceUSD;
@@ -124,23 +124,16 @@ export default async function getNft(req, res, CONTRACTS, ABIS, signer, helia) {
         isOnDutchAuction: dutchAuction != null
     }
 
-    const contractAddresses = {
-        nftContractAddress: await CONTRACTS.nftContract.getAddress(),
-        tradingContractAddress: await CONTRACTS.tradingContract.getAddress(),
-        auctionContractAddress: await CONTRACTS.auctionContract.getAddress(),
-        dutchContractAddress: await CONTRACTS.dutchContract.getAddress(),
-        offerContractAddress: await CONTRACTS.offerContract.getAddress(),
-        fixedContractAddress: await CONTRACTS.fixedContract.getAddress(),
-    }
-
     res.render("singleNft/nft", {
         nft: nft, 
         isLoggedIn: userAddress ? true : false,
         isOwner: isOwner,
         isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase(),
         hasActiveOffer: hasActiveOffer,
-        hasPendingReturns: userAddress ? await CONTRACTS.auctionContract.connect(signer).hasPendingReturns(tokenId, userAddress) : false,        
-        ABIS: ABIS,
-        contractAddresses: contractAddresses
+        hasPendingReturns: userAddress ? await tradingContract.connect(signer).hasPendingReturns(tokenId, userAddress) : false,
+        tradingContractAddress: await tradingContract.getAddress(),
+        tradingContractABI: tradingContractABI,
+        nftContractAddress: await nftContract.getAddress(),
+        nftContractABI: nftContractABI
     });
 }

@@ -14,10 +14,10 @@ contract ERC721 {
     mapping(uint256 => address) internal _owners;
     // owner => token count
     mapping(address => uint256) internal _balances;
+    // token id => approved address
+    mapping(uint256 => address) internal _tokenApprovals;
     // owner => (operator => yes/no)
     mapping(address => mapping(address => bool)) internal _operatorApprovals;
-    // token id => (approved address => status)
-    mapping(uint256 => mapping(address => bool)) private _multiTokenApprovals;
     // token id => token uri
     mapping(uint256 => string) _tokenUris;
 
@@ -25,7 +25,6 @@ contract ERC721 {
     event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
     event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
     event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
-    event MultiApproval(address indexed owner, address indexed approved, uint256 indexed tokenId, bool approvedStatus);
 
     constructor(string memory _name, string memory _symbol) {
         name = _name;
@@ -67,12 +66,7 @@ contract ERC721 {
     }
 
     function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes memory _data) public payable {
-        require(
-            ownerOf(_tokenId) == msg.sender ||
-            _operatorApprovals[ownerOf(_tokenId)][msg.sender] ||
-            _multiTokenApprovals[_tokenId][msg.sender],
-            "ERC721: not authorized"
-        );
+        require(ownerOf(_tokenId) == msg.sender || _tokenApprovals[_tokenId] == msg.sender || _operatorApprovals[ownerOf(_tokenId)][msg.sender], "ERC721: invalid token ID");
 
         _transfer(_from, _to, _tokenId);
 
@@ -82,42 +76,23 @@ contract ERC721 {
 
     function transferFrom(address _from, address _to, uint256 _tokenId) public payable {
         // unsafe transfer without onERC721Received, used for contracts that don't implement IERC721Receiver
-        require(
-            ownerOf(_tokenId) == msg.sender ||
-            _operatorApprovals[ownerOf(_tokenId)][msg.sender] ||
-            _multiTokenApprovals[_tokenId][msg.sender],
-            "ERC721: not authorized"
-        );
+        require(ownerOf(_tokenId) == msg.sender || _tokenApprovals[_tokenId] == msg.sender || _operatorApprovals[ownerOf(_tokenId)][msg.sender], "ERC721: invalid token ID");
 
         _transfer(_from, _to, _tokenId);
     }
 
-    function approve(address[] memory _approved, uint256 _tokenId) public payable onlyTokenOwner(_tokenId) {
-        for (uint256 i = 0; i < _approved.length; i++) {
-            _multiTokenApprovals[_tokenId][_approved[i]] = true;
-            emit MultiApproval(ownerOf(_tokenId), _approved[i], _tokenId, true);
-        }
+    function approve(address _approved, uint256 _tokenId) public payable onlyTokenOwner(_tokenId) {
+        _tokenApprovals[_tokenId] = _approved;
+        emit Approval(ownerOf(_tokenId), _approved, _tokenId);
     }
 
-    // revokeApproval removes specific addresses from the list of approved addresses for a given tokenId.
-    // This is useful to revoke subcontract or delegated transfer rights from previously authorized addresses.
-    function revokeApproval(address[] memory _revoked, uint256 _tokenId) public onlyTokenOwner(_tokenId) {
-        for (uint256 i = 0; i < _revoked.length; i++) {
-            _multiTokenApprovals[_tokenId][_revoked[i]] = false;
-            emit MultiApproval(ownerOf(_tokenId), _revoked[i], _tokenId, false);
-        }
+    function setApprovalForAll(address _operator, bool _approved) public {
+        _operatorApprovals[msg.sender][_operator] = _approved;
+        emit ApprovalForAll(msg.sender, _operator, _approved);
     }
 
-    function setApprovalForAll(address[] memory _operators, bool _approved) public {
-        for (uint256 i = 0; i < _operators.length; i++) {
-            _operatorApprovals[msg.sender][_operators[i]] = _approved;
-            emit ApprovalForAll(msg.sender, _operators[i], _approved);
-        }
-    }
-
-
-    function isApprovedForToken(uint256 _tokenId, address _operator) public view returns (bool) {
-        return _multiTokenApprovals[_tokenId][_operator];
+    function getApproved(uint256 _tokenId) public view returns (address) {
+        return _tokenApprovals[_tokenId];
     }
 
     function isApprovedForAll(address _owner, address _operator) public view returns (bool) {
@@ -186,10 +161,12 @@ contract ERC721 {
     }
 
     function _transfer(address _from, address _to, uint256 _tokenId) internal validAddress(_to) {
+        _tokenApprovals[_tokenId] = address(0); // Saves gas in comparison to delete
         _balances[_from] -= 1;
         _balances[_to] += 1;
         _owners[_tokenId] = _to;
 
         emit Transfer(_from, _to, _tokenId);
+        emit Approval(_from, address(0), _tokenId);
     }
 }

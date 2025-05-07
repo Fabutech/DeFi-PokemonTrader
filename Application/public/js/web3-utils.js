@@ -109,15 +109,15 @@ function setupListNFTHandler() {
     const delistBtn = document.getElementById("delistNFTbtn");
 
     const web3 = new Web3(window.ethereum);
-    const nftContract = new web3.eth.Contract(ABIS.erc721ABI.abi, contractAddresses.nftContractAddress);
-    const fixedContract = new web3.eth.Contract(ABIS.fixedABI.abi, contractAddresses.fixedContractAddress);
+    const nftContract = new web3.eth.Contract(nftContractABI, nftContractAddress);
+    const tradingContract = new web3.eth.Contract(tradingABI, tradingAddress);
 
     if (listBtn) {
         listBtn.addEventListener("click", async () => {
-            const isTokenApproved = await nftContract.methods.isApprovedForToken(tokenId, contractAddresses.fixedContractAddress).call();
-            const isOperatorApproved = await nftContract.methods.isApprovedForAll(userAddress, contractAddresses.fixedContractAddress).call();
+            const approvedAddress = await nftContract.methods.getApproved(tokenId).call();
+            const isOperatorApproved = await nftContract.methods.isApprovedForAll(userAddress, tradingAddress).call();
       
-            if (!isTokenApproved && !isOperatorApproved) {
+            if (approvedAddress.toLowerCase() !== tradingAddress.toLowerCase() && !isOperatorApproved) {
                 showApprovalPopup(isFromListing=true);
                 return;
             }
@@ -149,8 +149,8 @@ function setupListNFTHandler() {
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                     const account = accounts[0];
 
-                    const estimatedGas = await fixedContract.methods.listNFT(tokenId, price, expiration).estimateGas({ from: account });
-                    await fixedContract.methods.listNFT(tokenId, price, expiration).send({
+                    const estimatedGas = await tradingContract.methods.listNFT(tokenId, price, expiration).estimateGas({ from: account });
+                    await tradingContract.methods.listNFT(tokenId, price, expiration).send({
                         from: account,
                         gas: estimatedGas + 1000n
                     });
@@ -184,8 +184,8 @@ function setupListNFTHandler() {
                     return;
                 }
 
-                const estimatedGas = await fixedContract.methods.delistNFT(tokenId).estimateGas({ from: account });
-                await fixedContract.methods.delistNFT(tokenId).send({
+                const estimatedGas = await tradingContract.methods.delistNFT(tokenId).estimateGas({ from: account });
+                await tradingContract.methods.delistNFT(tokenId).send({
                     from: account,
                     gas: estimatedGas + 1000n
                 });
@@ -236,10 +236,10 @@ function setupBuyNFTHandler() {
                 }
 
                 const web3 = new Web3(window.ethereum);
-                const fixedContract = new web3.eth.Contract(ABIS.fixedABI.abi, contractAddresses.fixedContractAddress);
+                const contract = new web3.eth.Contract(tradingABI, tradingAddress);
 
-                const estimatedGas = await fixedContract.methods.buyNFT(tokenId).estimateGas({ from: account, value: price });
-                await fixedContract.methods.buyNFT(tokenId).send({
+                const estimatedGas = await contract.methods.buyNFT(tokenId).estimateGas({ from: account, value: price });
+                await contract.methods.buyNFT(tokenId).send({
                     from: account,
                     value: price,
                     gas: estimatedGas + 1000n
@@ -257,9 +257,6 @@ function setupBuyNFTHandler() {
 function setupOfferNFTHandler() {
     const offerBtn = document.getElementById("submit-offer");
     const withdrawBtn = document.getElementById("withdraw-offer-btn");
-
-    const web3 = new Web3(window.ethereum);
-    const offerContract = new web3.eth.Contract(ABIS.offerABI.abi, contractAddresses.offerContractAddress);
 
     if (offerBtn) {
         offerBtn.addEventListener("click", async () => {
@@ -282,12 +279,15 @@ function setupOfferNFTHandler() {
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                 const account = accounts[0];
 
-                const estimatedGas = await offerContract.methods.makeOffer(tokenId, expiration).estimateGas({
+                const web3 = new Web3(window.ethereum);
+                const contract = new web3.eth.Contract(tradingABI, tradingAddress);
+
+                const estimatedGas = await contract.methods.makeOffer(tokenId, expiration).estimateGas({
                     from: account,
                     value: amountInWei
                 });
 
-                await offerContract.methods.makeOffer(tokenId, expiration).send({
+                await contract.methods.makeOffer(tokenId, expiration).send({
                     from: account,
                     value: amountInWei,
                     gas: estimatedGas + 1000n
@@ -311,10 +311,12 @@ function setupOfferNFTHandler() {
             try {
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                 const account = accounts[0];
+                const web3 = new Web3(window.ethereum);
+                const contract = new web3.eth.Contract(tradingABI, tradingAddress);
 
-                const estimatedGas = await offerContract.methods.cancelOffer(tokenId).estimateGas({ from: account });
+                const estimatedGas = await contract.methods.cancelOffer(tokenId).estimateGas({ from: account });
 
-                await offerContract.methods.cancelOffer(tokenId).send({
+                await contract.methods.cancelOffer(tokenId).send({
                     from: account,
                     gas: estimatedGas + 1000n
                 });
@@ -338,12 +340,14 @@ function setupOfferNFTHandler() {
             try {
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                 const account = accounts[0];
+                const web3 = new Web3(window.ethereum);
+                const contract = new web3.eth.Contract(tradingABI, tradingAddress);
 
-                const estimatedGas = await offerContract.methods.acceptOffer(tokenId, offerer).estimateGas({
+                const estimatedGas = await contract.methods.acceptOffer(tokenId, offerer).estimateGas({
                     from: account
                 });
 
-                await offerContract.methods.acceptOffer(tokenId, offerer).send({
+                await contract.methods.acceptOffer(tokenId, offerer).send({
                     from: account,
                     gas: estimatedGas + 1000n
                 });
@@ -365,15 +369,15 @@ function setupAuctionNFTHandler() {
     const finalizeAuctionBtn = document.getElementById("finalize-auction-btn");
 
     const web3 = new Web3(window.ethereum);
-    const nftContract = new web3.eth.Contract(ABIS.erc721ABI.abi, contractAddresses.nftContractAddress);
-    const auctionContract = new web3.eth.Contract(ABIS.auctionABI.abi, contractAddresses.auctionContractAddress);
+    const nftContract = new web3.eth.Contract(nftContractABI, nftContractAddress);
+    const tradingContract = new web3.eth.Contract(tradingABI, tradingAddress);
 
     if (auctionBtn) {
         auctionBtn.addEventListener("click", async () => {
-            const isTokenApproved = await nftContract.methods.isApprovedForToken(tokenId, contractAddresses.auctionContractAddress).call();
-            const isOperatorApproved = await nftContract.methods.isApprovedForAll(userAddress, contractAddresses.auctionContractAddress).call();
+            const approvedAddress = await nftContract.methods.getApproved(tokenId).call();
+            const isOperatorApproved = await nftContract.methods.isApprovedForAll(userAddress, tradingAddress).call();
       
-            if (!isTokenApproved && !isOperatorApproved) {
+            if (approvedAddress.toLowerCase() !== tradingAddress.toLowerCase() && !isOperatorApproved) {
                 showApprovalPopup(isFromListing=false, isFromAuction=true);
                 return;
             }
@@ -404,8 +408,8 @@ function setupAuctionNFTHandler() {
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                     const account = accounts[0];
 
-                    const estimatedGas = await auctionContract.methods.startAuction(tokenId, startingPrice, endTimestamp).estimateGas({ from: account });
-                    await auctionContract.methods.startAuction(tokenId, startingPrice, endTimestamp).send({
+                    const estimatedGas = await tradingContract.methods.startAuction(tokenId, startingPrice, endTimestamp).estimateGas({ from: account });
+                    await tradingContract.methods.startAuction(tokenId, startingPrice, endTimestamp).send({
                         from: account,
                         gas: estimatedGas + 1000n
                     });
@@ -440,8 +444,8 @@ function setupAuctionNFTHandler() {
                     return;
                 }
 
-                const estimatedGas = await auctionContract.methods.cancelAuction(tokenId).estimateGas({ from: account });
-                await auctionContract.methods.cancelAuction(tokenId).send({
+                const estimatedGas = await tradingContract.methods.cancelAuction(tokenId).estimateGas({ from: account });
+                await tradingContract.methods.cancelAuction(tokenId).send({
                     from: account,
                     gas: estimatedGas + 1000n
                 });
@@ -478,8 +482,8 @@ function setupAuctionNFTHandler() {
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                     const account = accounts[0];
 
-                    const estimatedGas = await auctionContract.methods.placeBid(tokenId).estimateGas({ from: account, value: bidPriceWei });
-                    await auctionContract.methods.placeBid(tokenId).send({
+                    const estimatedGas = await tradingContract.methods.placeBid(tokenId).estimateGas({ from: account, value: bidPriceWei });
+                    await tradingContract.methods.placeBid(tokenId).send({
                         from: account,
                         value: bidPriceWei,
                         gas: estimatedGas + 1000n
@@ -496,7 +500,7 @@ function setupAuctionNFTHandler() {
                     document.getElementById("placeBid-status").style.color = "red";
                 }
             };
-        }); 
+        });
     }
 
     // Add withdraw bid handler
@@ -516,8 +520,8 @@ function setupAuctionNFTHandler() {
                     return;
                 }
 
-                const estimatedGas = await auctionContract.methods.withdrawBid(tokenId).estimateGas({ from: account });
-                await auctionContract.methods.withdrawBid(tokenId).send({
+                const estimatedGas = await tradingContract.methods.withdrawBid(tokenId).estimateGas({ from: account });
+                await tradingContract.methods.withdrawBid(tokenId).send({
                     from: account,
                     gas: estimatedGas + 1000n
                 });
@@ -546,9 +550,9 @@ function setupAuctionNFTHandler() {
                     return;
                 }
 
-                const estimatedGas = await auctionContract.methods.finalizeAuction(tokenId).estimateGas({ from: account });
+                const estimatedGas = await tradingContract.methods.finalizeAuction(tokenId).estimateGas({ from: account });
 
-                await auctionContract.methods.finalizeAuction(tokenId).send({
+                await tradingContract.methods.finalizeAuction(tokenId).send({
                     from: account,
                     gas: estimatedGas + 1000n
                 });
@@ -569,7 +573,8 @@ function setupDutchAuctionHandler() {
     const cancelAuctionBtn = document.getElementById("cancel-dutch-auction");
 
     const web3 = new Web3(window.ethereum);
-    const dutchContract = new web3.eth.Contract(ABIS.dutchABI.abi, contractAddresses.dutchContractAddress);
+    const tradingContract = new web3.eth.Contract(tradingABI, tradingAddress);
+    const nftContract = new web3.eth.Contract(nftContractABI, nftContractAddress);
 
     if (confirmDutchBtn) {
         confirmDutchBtn.addEventListener("click", async () => {
@@ -593,8 +598,8 @@ function setupDutchAuctionHandler() {
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                 const account = accounts[0];
 
-                const estimatedGas = await dutchContract.methods.startDutchAuction(tokenId, startPrice, endPrice, duration).estimateGas({ from: account });
-                await dutchContract.methods.startDutchAuction(tokenId, startPrice, endPrice, duration).send({
+                const estimatedGas = await tradingContract.methods.startDutchAuction(tokenId, startPrice, endPrice, duration).estimateGas({ from: account });
+                await tradingContract.methods.startDutchAuction(tokenId, startPrice, endPrice, duration).send({
                     from: account,
                     gas: estimatedGas + 1000n
                 });
@@ -621,8 +626,12 @@ function setupDutchAuctionHandler() {
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                 const account = accounts[0];
 
-                const estimatedGas = await dutchContract.methods.buyFromDutchAuction(tokenId).estimateGas({ from: account, value: price });
-                await dutchContract.methods.buyFromDutchAuction(tokenId).send({
+                console.log(account);
+                console.log(price);
+                console.log(priceInEth);
+
+                const estimatedGas = await tradingContract.methods.buyFromDutchAuction(tokenId).estimateGas({ from: account, value: price });
+                await tradingContract.methods.buyFromDutchAuction(tokenId).send({
                     from: account,
                     value: price
                 });
@@ -641,8 +650,8 @@ function setupDutchAuctionHandler() {
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                 const account = accounts[0];
 
-                const estimatedGas = await dutchContract.methods.cancelDutchAuction(tokenId).estimateGas({ from: account });
-                await dutchContract.methods.cancelDutchAuction(tokenId).send({
+                const estimatedGas = await tradingContract.methods.cancelDutchAuction(tokenId).estimateGas({ from: account });
+                await tradingContract.methods.cancelDutchAuction(tokenId).send({
                     from: account,
                     gas: estimatedGas + 1000n
                 });
@@ -659,7 +668,7 @@ function setupDutchAuctionHandler() {
 
 function showApprovalPopup(isFromListing = false, isFromAuction = false) {
     const web3 = new Web3(window.ethereum);
-    const nftContract = new web3.eth.Contract(ABIS.erc721ABI.abi, contractAddresses.nftContractAddress);
+    const nftContract = new web3.eth.Contract(nftContractABI, nftContractAddress);
 
     const popup = document.getElementById("approval-popup");
     popup.style.display = "flex";
@@ -683,12 +692,7 @@ function showApprovalPopup(isFromListing = false, isFromAuction = false) {
 
     document.getElementById("approve-single").onclick = async () => {
         try {
-            await nftContract.methods.approve([
-                contractAddresses.fixedContractAddress,
-                contractAddresses.auctionContractAddress,
-                contractAddresses.dutchContractAddress,
-                contractAddresses.offerContractAddress
-            ], tokenId).send({ from: userAddress });
+            await nftContract.methods.approve(tradingAddress, tokenId).send({ from: userAddress });
             updateStatus("✅ Single NFT approved!");
             setTimeout(cleanup, 2000);
         } catch (err) {
@@ -699,12 +703,7 @@ function showApprovalPopup(isFromListing = false, isFromAuction = false) {
 
     document.getElementById("approve-all").onclick = async () => {
         try {
-            await nftContract.methods.setApprovalForAll([
-                contractAddresses.fixedContractAddress,
-                contractAddresses.auctionContractAddress,
-                contractAddresses.dutchContractAddress,
-                contractAddresses.offerContractAddress
-            ], true).send({ from: userAddress });
+            await nftContract.methods.setApprovalForAll(tradingAddress, true).send({ from: userAddress });
             updateStatus("✅ All NFTs approved!");
             setTimeout(cleanup, 2000);
         } catch (err) {
