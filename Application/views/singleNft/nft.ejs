@@ -14,7 +14,13 @@
 
   <script src="../../js/transactionHistoryLoader.js"></script>
   <script src="../../js/dutchAuction.js"></script>
-  <script src="../../js/web3-utils.js"></script>
+  <script src="../../js/web3/web3-utils.js"></script>
+  <script src="../../js/web3/approvalHandler.js"></script>
+  <script src="../../js/web3/auctionNftHandler.js"></script>
+  <script src="../../js/web3/buyNftHandler.js"></script>
+  <script src="../../js/web3/dutchAuctionHandler.js"></script>
+  <script src="../../js/web3/listNftHandler.js"></script>
+  <script src="../../js/web3/offerNftHandler.js"></script>
 
   <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
 
@@ -163,7 +169,7 @@
                   <% } else { %>
                     <button id="withdraw-offer-btn" class="white-btn half-width">Withdraw offer</button>
                   <% } %>
-                <% } else { %>
+                <% } else if (isOwner) { %>
                   <% if (nft.isListed) { %>
                     <button id="delistNFTbtn" class="white-btn half-width">Delist NFT</button>
                   <% } else if (nft.isOnAuction && (!nft.auction.hasEnded || !nft.auction.hasBid)) { %>
