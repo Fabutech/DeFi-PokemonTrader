@@ -3,9 +3,13 @@ pragma solidity ^0.8.28;
 
 import "./ERC721.sol";
 
-contract TradingContract {
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+
+contract TradingContract is ReentrancyGuard, Pausable, Ownable {
     ERC721 public nftContract;
-    address public owner;
 
     struct Listing {
         address seller;
@@ -71,10 +75,6 @@ contract TradingContract {
 
 
     // ********************** MODIFIERS **********************
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only marketplace owner can call this");
-        _;
-    }
 
     modifier onlyTokenOwner(uint256 tokenId) {
         require(nftContract.ownerOf(tokenId) == msg.sender, "Not token owner");
@@ -97,15 +97,14 @@ contract TradingContract {
         _;
     }
 
-    constructor(address _nftContract) {
+    constructor(address _nftContract) Ownable(msg.sender) {
         nftContract = ERC721(_nftContract);
-        owner = msg.sender;
     }
 
 
     // ********************** FIXED-PRICE LISTING **********************
 
-    function listNFT(uint256 tokenId, uint256 price, uint256 expiration) external onlyTokenOwner(tokenId) {
+    function listNFT(uint256 tokenId, uint256 price, uint256 expiration) external onlyTokenOwner(tokenId) nonReentrant whenNotPaused {
         require(nftContract.getApproved(tokenId) == address(this) || nftContract.isApprovedForAll(msg.sender, address(this)),
             "Marketplace not approved to manage this NFT");
         require(expiration > block.timestamp, "Expiration must be in the future");
@@ -115,7 +114,7 @@ contract TradingContract {
         emit NFTListed(tokenId, msg.sender, price);
     }
 
-    function buyNFT(uint256 tokenId) external payable isListed(tokenId) {
+    function buyNFT(uint256 tokenId) external payable isListed(tokenId) nonReentrant whenNotPaused {
         Listing memory listedNFT = listings[tokenId];
         require(msg.value >= listedNFT.price, "Insufficient funds");
         require(block.timestamp <= listedNFT.expiration, "Listing has expired");
@@ -134,7 +133,7 @@ contract TradingContract {
         emit NFTSold(tokenId, listedNFT.seller, msg.sender, msg.value);
     }
 
-    function delistNFT(uint256 tokenId) external onlyTokenOwner(tokenId) isListed(tokenId) {
+    function delistNFT(uint256 tokenId) external onlyTokenOwner(tokenId) isListed(tokenId) nonReentrant whenNotPaused {
         delete listings[tokenId];
         emit NFTDelisted(tokenId, msg.sender);
     }
@@ -142,7 +141,7 @@ contract TradingContract {
 
     // ********************** AUCTIONS **********************
 
-    function startAuction(uint256 tokenId, uint256 startingPrice, uint256 endTimeStamp) external onlyTokenOwner(tokenId) {
+    function startAuction(uint256 tokenId, uint256 startingPrice, uint256 endTimeStamp) external onlyTokenOwner(tokenId) nonReentrant whenNotPaused {
         require(nftContract.getApproved(tokenId) == address(this) || nftContract.isApprovedForAll(msg.sender, address(this)),
             "Marketplace not approved to manage this NFT");
         require(!listings[tokenId].isActive && !dutchAuctions[tokenId].isActive, "Cannot start auction: NFT is listed or in Dutch auction");
@@ -160,7 +159,7 @@ contract TradingContract {
         emit AuctionStarted(tokenId, msg.sender, startingPrice, endTimeStamp);
     }
 
-    function placeBid(uint256 tokenId) external payable isAuctionActive(tokenId) {
+    function placeBid(uint256 tokenId) external payable isAuctionActive(tokenId) nonReentrant whenNotPaused {
         require(block.timestamp < auctions[tokenId].endTimestamp, "Auction has ended");
 
         Auction storage auction = auctions[tokenId];
@@ -178,7 +177,7 @@ contract TradingContract {
         emit NewBid(tokenId, msg.sender, msg.value);
     }
 
-    function withdrawBid(uint256 tokenId) external {
+    function withdrawBid(uint256 tokenId) external nonReentrant whenNotPaused {
         uint256 amount = pendingReturns[tokenId][msg.sender];
         require(amount > 0, "No funds to withdraw");
 
@@ -188,7 +187,7 @@ contract TradingContract {
         emit BidWithdrawn(tokenId, msg.sender, amount);
     }
 
-    function finalizeAuction(uint256 tokenId) external isAuctionEnded(tokenId) {
+    function finalizeAuction(uint256 tokenId) external isAuctionEnded(tokenId) nonReentrant whenNotPaused {
         Auction storage auction = auctions[tokenId];
         require(auction.highestBidder != address(0), "No bids placed");
 
@@ -212,7 +211,7 @@ contract TradingContract {
         delete auctions[tokenId];
     }
 
-    function cancelAuction(uint256 tokenId) external onlyTokenOwner(tokenId) isAuctionActive(tokenId) {
+    function cancelAuction(uint256 tokenId) external onlyTokenOwner(tokenId) isAuctionActive(tokenId) nonReentrant whenNotPaused {
         Auction storage auction = auctions[tokenId];
 
         // Refund highest bidder
@@ -233,7 +232,7 @@ contract TradingContract {
 
     // ********************** DUTCH-AUCTIONS **********************
 
-    function startDutchAuction(uint256 tokenId, uint256 startPrice, uint256 endPrice, uint256 duration) external onlyTokenOwner(tokenId) {
+    function startDutchAuction(uint256 tokenId, uint256 startPrice, uint256 endPrice, uint256 duration) external onlyTokenOwner(tokenId) nonReentrant whenNotPaused {
         require(nftContract.getApproved(tokenId) == address(this) || nftContract.isApprovedForAll(msg.sender, address(this)),
             "Marketplace not approved to manage this NFT");
         require(startPrice > endPrice, "Start price must be greater than end price");
@@ -254,7 +253,7 @@ contract TradingContract {
         emit DutchAuctionStarted(tokenId, msg.sender, startPrice, endPrice, endTime);
     }
 
-    function buyFromDutchAuction(uint256 tokenId) external payable {
+    function buyFromDutchAuction(uint256 tokenId) external payable nonReentrant whenNotPaused {
         DutchAuction storage auction = dutchAuctions[tokenId];
         require(auction.isActive, "Dutch auction not active");
         require(block.timestamp <= auction.endTimestamp, "Auction expired");
@@ -279,7 +278,7 @@ contract TradingContract {
         emit DutchAuctionEnded(tokenId, msg.sender, msg.value);
     }
 
-    function cancelDutchAuction(uint256 tokenId) external onlyTokenOwner(tokenId) {
+    function cancelDutchAuction(uint256 tokenId) external onlyTokenOwner(tokenId) nonReentrant whenNotPaused {
         DutchAuction storage auction = dutchAuctions[tokenId];
         require(auction.isActive, "Dutch auction not active");
 
@@ -305,7 +304,7 @@ contract TradingContract {
 
     // ********************** OFFERS **********************
 
-    function makeOffer(uint256 tokenId, uint256 expiration) external payable {
+    function makeOffer(uint256 tokenId, uint256 expiration) external payable nonReentrant whenNotPaused {
         require(msg.value > 0, "Offer amount must be greater than zero");
         require(expiration > block.timestamp, "Expiration must be in the future");
 
@@ -323,7 +322,7 @@ contract TradingContract {
         emit OfferMade(tokenId, msg.sender, msg.value, expiration);
     }
 
-    function cancelOffer(uint256 tokenId) external {
+    function cancelOffer(uint256 tokenId) external nonReentrant whenNotPaused {
         Offer memory offer = offers[tokenId][msg.sender];
         require(offer.amount > 0, "No offer to cancel");
 
@@ -344,7 +343,7 @@ contract TradingContract {
         emit OfferCancelled(tokenId, msg.sender);
     }
 
-    function acceptOffer(uint256 tokenId, address offerer) external onlyTokenOwner(tokenId) {
+    function acceptOffer(uint256 tokenId, address offerer) external onlyTokenOwner(tokenId) nonReentrant whenNotPaused {
         Offer memory offer = offers[tokenId][offerer];
         require(offer.amount > 0, "No valid offer");
         require(block.timestamp <= offer.expiration, "Offer expired");
@@ -390,5 +389,17 @@ contract TradingContract {
             }
         }
         delete offerers[tokenId];
+    }
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    function paused() public view override returns (bool) {
+        return Pausable.paused();
     }
 }

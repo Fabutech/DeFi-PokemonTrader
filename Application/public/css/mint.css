@@ -77,6 +77,34 @@ button[type="submit"] {
     transition: background-color 0.3s;
 }
 
+.red-btn {
+    padding: 10px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.red-btn:hover {
+    background-color: #c0392b;
+}
+
+.yellow-btn {
+    padding: 10px;
+    background-color: #f1c40f;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.yellow-btn:hover {
+    background-color: #d4ac0d;
+}
+
 button[type="submit"]:hover {
     background-color: #1b5fc4;
 }

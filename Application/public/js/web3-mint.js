@@ -169,3 +169,37 @@ document.getElementById('manualMintForm').addEventListener('submit', async (e) =
     document.getElementById('loadingOverlay').classList.remove('active');
   }
 });
+
+const pauseButton = document.getElementById('togglePauseBtn');
+const web3 = new Web3(window.ethereum);
+const tradingContract = new web3.eth.Contract(tradingContractABI, tradingContractAddress);
+
+async function updatePauseButton() {
+    try {
+        const isPaused = await tradingContract.methods.paused().call();
+        pauseButton.textContent = isPaused ? 'Unpause Contract' : 'Pause Contract';
+        pauseButton.className = isPaused ? 'yellow-btn' : 'red-btn';
+    } catch (error) {
+        pauseButton.textContent = 'Error checking status';
+        console.error(error);
+    }
+}
+
+pauseButton.onclick = async function () {
+    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+    const account = accounts[0];
+
+    try {
+        const isPaused = await tradingContract.methods.paused().call();
+        if (isPaused) {
+            await tradingContract.methods.unpause().send({ from: account });
+        } else {
+            await tradingContract.methods.pause().send({ from: account });
+        }
+        updatePauseButton();
+    } catch (error) {
+        console.error("Error toggling pause:", error);
+    }
+};
+
+window.addEventListener('load', updatePauseButton);

@@ -27,6 +27,7 @@
             <div class="tabs">
                 <button class="tab-button active" data-tab="auto-mint">Auto Mint</button>
                 <button class="tab-button" data-tab="manual-mint">Manual Mint</button>
+                <button class="tab-button" data-tab="emergency-stop">Emergency Stop</button>
             </div>
 
             <div id="mintStatus" class="mint-status"></div>
@@ -89,6 +90,12 @@
                 </form>
             </div>
 
+            <div class="tab-content" id="emergency-stop">
+                <h2 class="tab-title">Emergency Stop</h2>
+                <p class="tab-description">Pause or resume the contract in case of emergency.</p>
+                <button id="togglePauseBtn" class="red-btn">Checking Status...</button>
+            </div>
+
         </div>
     </section>
 
@@ -96,6 +103,8 @@
     <script>
         const nftContractAddress = "<%= nftContractAddress %>";
         const nftContractABI = JSON.parse(`<%- JSON.stringify(nftContractABI) %>`); 
+        const tradingContractAddress = "<%= tradingContractAddress %>";
+        const tradingContractABI = JSON.parse(`<%- JSON.stringify(tradingContractABI) %>`); 
 
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', () => {

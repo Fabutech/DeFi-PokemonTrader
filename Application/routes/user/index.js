@@ -2,7 +2,7 @@ import express from 'express';
 
 import getUserNFTs from './getUserNFTs.js';
 
-export default function index(DB, nftContract, nftContractABI, signer, helia) {
+export default function index(DB, nftContract, nftContractABI, tradingContract, tradingContractABI, signer, helia) {
     const MainRouter = express.Router();
 
     MainRouter.route("/nfts")
@@ -19,6 +19,8 @@ export default function index(DB, nftContract, nftContractABI, signer, helia) {
             res.render("mint", {
                 nftContractAddress: await nftContract.getAddress(),
                 nftContractABI: nftContractABI,
+                tradingContractAddress: await tradingContract.getAddress(),
+                tradingContractABI: tradingContractABI,
                 userAddress: userAddress,
                 isContractOwner: contractOwner && userAddress && contractOwner.toLowerCase() === userAddress.toLowerCase()
             });
