@@ -156,8 +156,8 @@
       ]
     },
     "/Users/fabutech/Documents/Projekte/DeFiApp/DeFiCode/SmartContracts/contracts/DutchAuctionMarketplace.sol": {
-      "lastModificationDate": 1746521197863,
-      "contentHash": "f4e19ce98ea14dd183d7dfabeb40c046",
+      "lastModificationDate": 1746516489156,
+      "contentHash": "525f51fc5ec879fc1a517295aa07d459",
       "sourceName": "contracts/DutchAuctionMarketplace.sol",
       "solcConfig": {
         "version": "0.8.28",
