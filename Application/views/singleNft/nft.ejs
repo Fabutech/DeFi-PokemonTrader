@@ -51,11 +51,6 @@
           <h1 class="nft-title"><%= nft.metadata.name.charAt(0).toUpperCase() + nft.metadata.name.slice(1) %> #<%= nft.tokenId %></h1>
           <div class="nft-owner">Owned by <%= nft.owner %></div>
 
-          <div class="nft-metrics">
-            <span><i class='bx bx-show'></i> <%= nft.stats.views %> views</span>
-            <span><i class='bx bx-heart'></i> <%= nft.stats.favorites %> favorites</span>
-          </div>
-
           <% if (nft.isListed || nft.isOnAuction || nft.isOnDutchAuction) { %>
             <div class="nft-sale-price-box">
               <div class="nft-sale-section">

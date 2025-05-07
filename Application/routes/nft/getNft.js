@@ -104,11 +104,6 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         res.redirect("/");
     }
 
-    const stats = {
-        views: 0,
-        favorites: 0
-    }
-
     const nft = {
         tokenId: tokenId,
         owner: tokenOwner,
@@ -118,7 +113,6 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         dutchAuction: dutchAuction,
         priceETH: listing != null ? ethers.formatEther(listing.price.toString()) : 0,
         priceUSD: nftPriceUSD,
-        stats: stats,
         isListed: listing != null,
         isOnAuction: auction != null,
         isOnDutchAuction: dutchAuction != null
