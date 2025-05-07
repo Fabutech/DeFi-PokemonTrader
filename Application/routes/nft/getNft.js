@@ -8,8 +8,14 @@ export default async function getNft(req, res, tradingContract, tradingContractA
 
     const contractOwner = await nftContract.connect(signer).contractOwner();
 
-    const tokenUri = await nftContract.connect(signer).tokenURI(tokenId);
-    const tokenOwner = await nftContract.connect(signer).ownerOf(tokenId);
+    let tokenUri, tokenOwner;
+    try {
+        tokenUri = await nftContract.connect(signer).tokenURI(tokenId);
+        tokenOwner = await nftContract.connect(signer).ownerOf(tokenId);
+    } catch (err) {
+        console.error(`Error fetching token URI or owner for token ${tokenId}:`, err);
+        return res.redirect("/");
+    }
 
     const isOwner = userAddress == tokenOwner.toLowerCase();
 
