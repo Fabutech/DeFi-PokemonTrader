@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
 import './IERC721Receiver.sol';
 
-contract ERC721 {
+contract ERC721 is IERC721, IERC721Metadata, ReentrancyGuard {
     string public name;
     string public symbol;
 
@@ -19,14 +24,12 @@ contract ERC721 {
     // owner => (operator => yes/no)
     mapping(address => mapping(address => bool)) internal _operatorApprovals;
     // token id => token uri
-    mapping(uint256 => string) _tokenUris;
+    mapping(uint256 => string) public _tokenUris;
 
-    // EVENTS
-    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
-    event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
-    event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
 
     constructor(string memory _name, string memory _symbol) {
+        require(bytes(_name).length > 0 && bytes(_symbol).length > 0, "ERC721: name and symbol required");
+        
         name = _name;
         symbol = _symbol;
         nextTokenIdToMint = 0;
@@ -35,6 +38,10 @@ contract ERC721 {
 
 
     // MODIFIERS
+    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view returns (bool) {
+        address owner = ownerOf(tokenId);
+        return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
+    }
     modifier onlyContractOwner() {  
         require(msg.sender == contractOwner, "ERC721: Only contract owner");
         _;
@@ -61,27 +68,25 @@ contract ERC721 {
         return _owners[_tokenId];
     }
 
-    function safeTransferFrom(address _from, address _to, uint256 _tokenId) public payable {
+    function safeTransferFrom(address _from, address _to, uint256 _tokenId) public {
         safeTransferFrom(_from, _to, _tokenId, "");
     }
 
-    function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes memory _data) public payable {
-        require(ownerOf(_tokenId) == msg.sender || _tokenApprovals[_tokenId] == msg.sender || _operatorApprovals[ownerOf(_tokenId)][msg.sender], "ERC721: invalid token ID");
-
+    function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes memory _data) public {
+        require(_isApprovedOrOwner(msg.sender, _tokenId), "ERC721: caller is not owner nor approved");
         _transfer(_from, _to, _tokenId);
-
-        // Trigger check
+        // Trigger check to ensure recipient contract implements onERC721Received
         require(_checkOnERC721Received(_from, _to, _tokenId, _data), "!ERC721Implementer");
     }
 
-    function transferFrom(address _from, address _to, uint256 _tokenId) public payable {
+    function transferFrom(address _from, address _to, uint256 _tokenId) public {
         // unsafe transfer without onERC721Received, used for contracts that don't implement IERC721Receiver
-        require(ownerOf(_tokenId) == msg.sender || _tokenApprovals[_tokenId] == msg.sender || _operatorApprovals[ownerOf(_tokenId)][msg.sender], "ERC721: invalid token ID");
-
+        require(_isApprovedOrOwner(msg.sender, _tokenId), "ERC721: caller is not owner nor approved");
         _transfer(_from, _to, _tokenId);
     }
 
-    function approve(address _approved, uint256 _tokenId) public payable onlyTokenOwner(_tokenId) {
+    function approve(address _approved, uint256 _tokenId) public onlyTokenOwner(_tokenId) {
+        require(_approved != msg.sender, "ERC721: cannot approve self");
         _tokenApprovals[_tokenId] = _approved;
         emit Approval(ownerOf(_tokenId), _approved, _tokenId);
     }
@@ -99,7 +104,8 @@ contract ERC721 {
         return _operatorApprovals[_owner][_operator];
     }
 
-    function mintTo(address _to, string memory _uri) public onlyContractOwner() validAddress(_to) {
+    // Mint a new token to a specified address with a metadata URI
+    function mintTo(address _to, string memory _uri) public onlyContractOwner() validAddress(_to) nonReentrant {
         _owners[nextTokenIdToMint] = _to;
         _balances[_to] += 1;
         _tokenUris[nextTokenIdToMint] = _uri;        
@@ -108,7 +114,8 @@ contract ERC721 {
         nextTokenIdToMint += 1;
     }
 
-    function batchMint(address _to, string[] memory _uris) public onlyContractOwner validAddress(_to) {
+    // Batch mint multiple tokens to a single address with respective URIs
+    function batchMint(address _to, string[] memory _uris) public onlyContractOwner validAddress(_to) nonReentrant {
         require(_uris.length > 0, "ERC721: Must provide at least one URI");
 
         uint256 startTokenId = nextTokenIdToMint;
@@ -140,33 +147,42 @@ contract ERC721 {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) private returns (bool) {
-        // check if to is an contract, if yes, to.code.length will always be > 0
+    ) internal returns (bool) {
+        // check if to is a contract, if yes, to.code.length will always be > 0
         if (to.code.length > 0) {
             try IERC721Receiver(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 retval) {
                 return retval == IERC721Receiver.onERC721Received.selector;
             } catch (bytes memory reason) {
+                // If no revert reason is returned, revert with generic error
                 if (reason.length == 0) {
                     revert("ERC721: transfer to non ERC721Receiver implementer");
                 } else {
                     /// @solidity memory-safe-assembly
+                    // Bubble up revert reason from the called contract
                     assembly {
                         revert(add(32, reason), mload(reason))
                     }
                 }
             }
         } else {
+            // If recipient is not a contract, assume it can receive tokens
             return true;
         }
     }
 
+    // Internal transfer function handling balances and ownership updates
     function _transfer(address _from, address _to, uint256 _tokenId) internal validAddress(_to) {
-        _tokenApprovals[_tokenId] = address(0); // Saves gas in comparison to delete
+        // Clear approvals by setting to zero address, saves gas compared to delete
+        _tokenApprovals[_tokenId] = address(0);
         _balances[_from] -= 1;
         _balances[_to] += 1;
         _owners[_tokenId] = _to;
 
         emit Transfer(_from, _to, _tokenId);
-        emit Approval(_from, address(0), _tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+        return interfaceId == type(IERC721).interfaceId
+            || interfaceId == type(IERC721Metadata).interfaceId;
     }
 }
