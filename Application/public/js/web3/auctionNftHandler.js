@@ -1,16 +1,23 @@
+// This function sets up handlers for interacting with NFT auctions: creating, canceling, bidding, withdrawing bids, and finalizing.
+// It uses Web3 to communicate with NFT and trading contracts and updates the UI accordingly.
+
 function setupAuctionNFTHandler() {
+    // Button references
     const auctionBtn = document.getElementById("startAuctionBtn");
     const cancelAuctionBtn = document.getElementById("cancelAuctionBtn");
     const placeBidBtn = document.getElementById("place-bid-btn");
     const withdrawBidBtn = document.getElementById("withdraw-bid-btn");
     const finalizeAuctionBtn = document.getElementById("finalize-auction-btn");
 
+    // Initialize Web3 and contract instances
     const web3 = new Web3(window.ethereum);
     const nftContract = new web3.eth.Contract(nftContractABI, nftContractAddress);
     const tradingContract = new web3.eth.Contract(tradingABI, tradingAddress);
 
+    // Start auction handler
     if (auctionBtn) {
         auctionBtn.addEventListener("click", async () => {
+            // Check if NFT is approved for the trading contract
             const approvedAddress = await nftContract.methods.getApproved(tokenId).call();
             const isOperatorApproved = await nftContract.methods.isApprovedForAll(userAddress, tradingAddress).call();
       
@@ -19,6 +26,7 @@ function setupAuctionNFTHandler() {
                 return;
             }
 
+            // Open the auction setup popup
             const auctionPopup = document.getElementById("auction-popup");
             auctionPopup.style.display = "flex";
 
@@ -28,16 +36,19 @@ function setupAuctionNFTHandler() {
             document.getElementById("close-auction-popup").onclick = closeAuction;
 
             document.getElementById("confirm-auction-start").onclick = async () => {
+                // Read user inputs
                 const startingPriceEth = document.getElementById("auction-starting-price").value;
                 const endDate = document.getElementById("auction-end-date").value;
                 const endTime = document.getElementById("auction-end-time").value;
 
+                // Validate inputs
                 if (!startingPriceEth || !endDate || !endTime) {
                     document.getElementById("start-auction-status").innerText = "⚠️ Please fill in all fields.";
                     document.getElementById("start-auction-status").style.color = "red";
                     return;
                 }
 
+                // Convert values to appropriate formats
                 const startingPrice = Web3.utils.toWei(startingPriceEth, "ether");
                 const endTimestamp = Math.floor(new Date(`${endDate}T${endTime}`).getTime() / 1000);
 
@@ -45,6 +56,7 @@ function setupAuctionNFTHandler() {
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                     const account = accounts[0];
 
+                    // Estimate gas and submit startAuction transaction
                     const estimatedGas = await tradingContract.methods.startAuction(tokenId, startingPrice, endTimestamp).estimateGas({ from: account });
                     await tradingContract.methods.startAuction(tokenId, startingPrice, endTimestamp).send({
                         from: account,
@@ -65,6 +77,7 @@ function setupAuctionNFTHandler() {
         });
     }
 
+    // Cancel auction handler
     if (cancelAuctionBtn) {
         cancelAuctionBtn.addEventListener("click", async () => {
             try {
@@ -81,6 +94,7 @@ function setupAuctionNFTHandler() {
                     return;
                 }
 
+                // Cancel the auction with estimated gas
                 const estimatedGas = await tradingContract.methods.cancelAuction(tokenId).estimateGas({ from: account });
                 await tradingContract.methods.cancelAuction(tokenId).send({
                     from: account,
@@ -95,6 +109,7 @@ function setupAuctionNFTHandler() {
         });
     }
 
+    // Place bid handler
     if (placeBidBtn) {
         placeBidBtn.addEventListener("click", () => {
             const placeBidPopup = document.getElementById("placeBid-popup");
@@ -119,6 +134,7 @@ function setupAuctionNFTHandler() {
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                     const account = accounts[0];
 
+                    // Submit bid transaction
                     const estimatedGas = await tradingContract.methods.placeBid(tokenId).estimateGas({ from: account, value: bidPriceWei });
                     await tradingContract.methods.placeBid(tokenId).send({
                         from: account,
@@ -140,7 +156,7 @@ function setupAuctionNFTHandler() {
         });
     }
 
-    // Add withdraw bid handler
+    // Withdraw bid handler
     if (withdrawBidBtn) {
         withdrawBidBtn.addEventListener("click", async () => {
             try {
@@ -157,6 +173,7 @@ function setupAuctionNFTHandler() {
                     return;
                 }
 
+                // Submit withdraw bid transaction
                 const estimatedGas = await tradingContract.methods.withdrawBid(tokenId).estimateGas({ from: account });
                 await tradingContract.methods.withdrawBid(tokenId).send({
                     from: account,
@@ -171,6 +188,7 @@ function setupAuctionNFTHandler() {
         });
     }
 
+    // Finalize auction handler
     if (finalizeAuctionBtn) {
         finalizeAuctionBtn.addEventListener("click", async () => {
             try {
@@ -187,6 +205,7 @@ function setupAuctionNFTHandler() {
                     return;
                 }
 
+                // Submit finalize transaction
                 const estimatedGas = await tradingContract.methods.finalizeAuction(tokenId).estimateGas({ from: account });
 
                 await tradingContract.methods.finalizeAuction(tokenId).send({

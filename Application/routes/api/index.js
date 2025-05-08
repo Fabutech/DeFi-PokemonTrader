@@ -2,19 +2,21 @@ import express from 'express';
 import { unixfs } from '@helia/unixfs';
 import { fromString } from 'uint8arrays/from-string';
 
+// This function sets up and returns the main API router with routes for wallet connection, transaction history, offers, and IPFS interactions.
 export default function index(DB, tradingContract, signer, helia) {
+    // Main API router initialization
     const MainRouter = express.Router();
-
     const fs = unixfs(helia);
 
+    // Save the user's wallet address in the session
     MainRouter.route("/connect")
     .post((req, res) => {
         const walletAddress = req.body.address;
-        req.session.walletAddress = walletAddress;
-
+        req.session.walletAddress = walletAddress; // Store wallet address in session
         res.send({ status: "ok" });
     });
 
+    // Get bids on the current auction for a specific token
     MainRouter.route("/history/token/:tokenId/bidsOnCurrentAuction")
     .get(async (req, res) => {
         const tokenId = req.params.tokenId;
@@ -25,21 +27,23 @@ export default function index(DB, tradingContract, signer, helia) {
         const auctionData = await tradingContract.connect(signer).auctions(tokenId);
         const auctionStartTime = Number(auctionData.startTimestamp.toString());
 
-        // Convert auctionStartTime (seconds) to a JS Date
+        // Convert auctionStartTime (seconds) to a JS Date object
         const auctionStartDate = new Date(auctionStartTime * 1000);
 
+        // Fetch bids from DB that occurred after the auction start time
         const history = await DB.transactions.find({ 
             tokenId, 
             eventType: "NewBid",
-            timestamp: { $gte: auctionStartDate } // Now comparing Date to Date!
+            timestamp: { $gte: auctionStartDate } // Filter using JS Date
         })
-        .sort({ timestamp: -1 })
+        .sort({ timestamp: -1 }) // Most recent first
         .skip(skip)
         .limit(limit);
 
         res.json(history);
     });
 
+    // Get full history of a specific token
     MainRouter.route("/history/token/:tokenId")
     .get(async (req, res) => {
         const tokenId = req.params.tokenId;
@@ -55,6 +59,7 @@ export default function index(DB, tradingContract, signer, helia) {
         res.json(history);
     });
 
+    // Get transaction history for a given wallet address
     MainRouter.route("/history/address/:address")
     .get(async (req, res) => {
         const address = req.params.address.toLowerCase();
@@ -64,14 +69,15 @@ export default function index(DB, tradingContract, signer, helia) {
 
         const history = await DB.transactions.find({
             $or: [{ from: address }, { to: address }]
-          })
-          .sort({ timestamp: -1 })
-          .skip(skip)
-          .limit(limit);
+        })
+        .sort({ timestamp: -1 })
+        .skip(skip)
+        .limit(limit);
 
         res.json(history);
     });
 
+    // Get all transaction history (paginated)
     MainRouter.route("/history")
     .get(async (req, res) => {
         const page = parseInt(req.query.page) || 0;
@@ -86,6 +92,7 @@ export default function index(DB, tradingContract, signer, helia) {
         res.json(all);
     });
 
+    // Get all offers for a token, ordered by active/expired status
     MainRouter.route("/offers/:tokenId")
     .get(async (req, res) => {
         const tokenId = req.params.tokenId;
@@ -93,6 +100,7 @@ export default function index(DB, tradingContract, signer, helia) {
         let offers = await tradingContract.connect(signer).getOffers(tokenId);
         let listing = await tradingContract.connect(signer).listings(tokenId);
 
+        // Convert BigInt values to strings to make JSON-serializable
         const serializeBigInts = (obj) => JSON.parse(
             JSON.stringify(obj, (_, v) => (typeof v === "bigint" ? v.toString() : v))
         );
@@ -104,8 +112,8 @@ export default function index(DB, tradingContract, signer, helia) {
             const expiredOffers = [];
 
             offers
-              .map(o => [...o]) // clone into plain arrays since original array is immutable
-              .filter(offer => offer[0] != 0n) // filter out zero address
+              .map(o => [...o]) // Convert to mutable array
+              .filter(offer => offer[0] != 0n) // Filter out invalid offers
               .forEach(offer => {
                 if (Number(offer[2]) > now) {
                   activeOffers.push(offer);
@@ -114,41 +122,41 @@ export default function index(DB, tradingContract, signer, helia) {
                 }
               });
 
-            activeOffers.sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0)); // Sort active offers descending
-            expiredOffers.sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0)); // Sort expired offers descending (optional)
+            // Sort offers by price (descending)
+            activeOffers.sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0));
+            expiredOffers.sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0));
 
             filteredOffers = activeOffers.concat(expiredOffers);
         }
-          
+
         res.json(serializeBigInts({
             offers: filteredOffers,
             currentPrice: listing.price
         }));
     });
 
+    // Fetch a file from IPFS using its CID
     MainRouter.route("/ipfs/:cid")
     .get(async (req, res) => {
         try {
             const { cid } = req.params;
-        
-            const stream = fs.cat(cid); // returns an async iterable
+            const stream = fs.cat(cid); // Async iterable for reading IPFS content
             const chunks = [];
+
             for await (const chunk of stream) {
-              chunks.push(chunk);
+                chunks.push(chunk);
             }
-        
+
             const buffer = Buffer.concat(chunks);
-        
-            // Optional: detect or assume content type
-            res.setHeader('Content-Type', 'image/jpeg'); // or detect from file
+            res.setHeader('Content-Type', 'image/jpeg'); // Assuming JPEG for now
             res.send(buffer);
-          } catch (err) {
+        } catch (err) {
             console.error(err);
             res.status(500).send('Failed to fetch image from IPFS');
-          }
+        }
     });
 
-    // POST /upload-nft: Accepts metadata and image URL, fetches image, uploads both to IPFS, returns metadata CID
+    // Upload metadata and image (fetched via URL) to IPFS
     MainRouter.route("/ipfs/upload")
       .post(express.json({ limit: '10mb' }), async (req, res) => {
         try {
@@ -157,9 +165,9 @@ export default function index(DB, tradingContract, signer, helia) {
           if (!imageRes.ok) throw new Error(`Failed to fetch image: ${imageRes.statusText}`);
           const arrayBuffer = await imageRes.arrayBuffer();
           const imageBytes = new Uint8Array(arrayBuffer);
-          const imageCid = await fs.addBytes(imageBytes);
+          const imageCid = await fs.addBytes(imageBytes); // Upload image to IPFS
           metadata.image = imageCid.toString();
-          const metadataCid = await fs.addBytes(fromString(JSON.stringify(metadata)));
+          const metadataCid = await fs.addBytes(fromString(JSON.stringify(metadata))); // Upload updated metadata
           res.send({ ipfsURI: `ipfs://${metadataCid.toString()}` });
         } catch (err) {
           console.error("Upload failed:", err);
@@ -167,15 +175,16 @@ export default function index(DB, tradingContract, signer, helia) {
         }
       });
 
-      MainRouter.route("/ipfs/upload-bytes")
+    // Upload metadata and base64-encoded image bytes directly to IPFS
+    MainRouter.route("/ipfs/upload-bytes")
       .post(express.json({ limit: '100mb' }), async (req, res) => {
         try {
           const { metadata, imageBytesBase64 } = req.body;
-          const imageBytes = Buffer.from(imageBytesBase64, 'base64');
-          const imageCid = await fs.addBytes(imageBytes);
+          const imageBytes = Buffer.from(imageBytesBase64, 'base64'); // Decode base64 image
+          const imageCid = await fs.addBytes(imageBytes); // Upload image to IPFS
           metadata.image = imageCid.toString();
           console.log("Decoded image size:", imageBytes.length);
-          const metadataCid = await fs.addBytes(fromString(JSON.stringify(metadata)));
+          const metadataCid = await fs.addBytes(fromString(JSON.stringify(metadata))); // Upload updated metadata
           res.send({ ipfsURI: `ipfs://${metadataCid.toString()}` });
         } catch (err) {
           console.error("Upload-bytes failed:", err);

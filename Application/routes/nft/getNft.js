@@ -2,14 +2,19 @@ import { ethers } from "ethers";
 import { TextDecoder } from 'util';
 import { unixfs } from "@helia/unixfs";
 
+/**
+ * This function retrieves all necessary data to display a single NFT's details,
+ * including ownership, pricing, metadata, and auction status.
+ */
 export default async function getNft(req, res, tradingContract, tradingContractABI, nftContract, nftContractABI, signer, helia) {
     const tokenId = req.params.tokenId;
-    const userAddress = req.session.walletAddress;
+    const userAddress = req.session.walletAddress; // Current user's wallet address from session
 
     const contractOwner = await nftContract.connect(signer).contractOwner();
 
     let tokenUri, tokenOwner;
     try {
+        // Fetch the token URI (for metadata) and the current owner of the token
         tokenUri = await nftContract.connect(signer).tokenURI(tokenId);
         tokenOwner = await nftContract.connect(signer).ownerOf(tokenId);
     } catch (err) {
@@ -17,8 +22,9 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         return res.redirect("/");
     }
 
-    const isOwner = userAddress == tokenOwner.toLowerCase();
+    const isOwner = userAddress == tokenOwner.toLowerCase(); // Check if current user is the owner
 
+    // Check if user has an active offer on this NFT
     let hasActiveOffer = false;
     if (userAddress) {
         const offer = await tradingContract.connect(signer).offers(tokenId, userAddress);
@@ -26,6 +32,7 @@ export default async function getNft(req, res, tradingContract, tradingContractA
     }
 
     let nftPriceUSD;
+    // Get listing data and compute price in USD if active
     let listing = await tradingContract.connect(signer).listings(tokenId);
     if (listing.isActive === false) {
         listing = null;
@@ -41,6 +48,7 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         }
     }
 
+    // Check for standard auction and calculate pricing in ETH and USD
     const auctionData = await tradingContract.connect(signer).auctions(tokenId);
     let auction = null;
     if (!listing && auctionData.isActive) {
@@ -50,8 +58,8 @@ export default async function getNft(req, res, tradingContract, tradingContractA
             const data = await response.json();
             const ethUsd = data.ethereum.usd;
 
-            startingPriceUSD = Number(ethers.formatEther(auctionData.startingPrice.toString())) * ethUsd
-            highestBidUSD = Number(ethers.formatEther(auctionData.highestBid.toString())) * ethUsd
+            startingPriceUSD = Number(ethers.formatEther(auctionData.startingPrice.toString())) * ethUsd;
+            highestBidUSD = Number(ethers.formatEther(auctionData.highestBid.toString())) * ethUsd;
         } catch (e) {
             console.log("Error while fetching eth to usd exchange rate: " + e);
         }
@@ -62,11 +70,12 @@ export default async function getNft(req, res, tradingContract, tradingContractA
             startingPriceUSD: startingPriceUSD,
             highestBidETH: ethers.formatEther(auctionData.highestBid.toString()),
             highestBidUSD: highestBidUSD,
-            hasBid: auctionData.highestBid.toString() != 0,
+            hasBid: auctionData.highestBid.toString() != "0",
             hasEnded: auctionData.endTimestamp.toString() != "0" && Number(auctionData.endTimestamp.toString()) <= Math.floor(Date.now() / 1000)
-        }
+        };
     }
 
+    // Check for Dutch auction if no standard auction or listing is active
     const dutchAuctionData = await tradingContract.connect(signer).dutchAuctions(tokenId);
     let dutchAuction = null;
     if (!listing && !auctionData.isActive && dutchAuctionData.isActive) {
@@ -76,8 +85,8 @@ export default async function getNft(req, res, tradingContract, tradingContractA
             const data = await response.json();
             const ethUsd = data.ethereum.usd;
 
-            startPriceUSD = Number(ethers.formatEther(dutchAuctionData.startPrice.toString())) * ethUsd
-            endPriceUSD = Number(ethers.formatEther(dutchAuctionData.endPrice.toString())) * ethUsd
+            startPriceUSD = Number(ethers.formatEther(dutchAuctionData.startPrice.toString())) * ethUsd;
+            endPriceUSD = Number(ethers.formatEther(dutchAuctionData.endPrice.toString())) * ethUsd;
         } catch (e) {
             console.log("Error while fetching eth to usd exchange rate: " + e);
         }
@@ -89,9 +98,8 @@ export default async function getNft(req, res, tradingContract, tradingContractA
             endPriceETH: ethers.formatEther(dutchAuctionData.endPrice.toString()),
             endPriceUSD: endPriceUSD,
             hasEnded: dutchAuctionData.endTimestamp.toString() != "0" && Number(dutchAuctionData.endTimestamp.toString()) <= Math.floor(Date.now() / 1000)
-        }
+        };
     }
-    
 
     // Fetch NFT metadata from the IPFS storage
     const decoder = new TextDecoder();
@@ -110,6 +118,7 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         res.redirect("/");
     }
 
+    // Combine NFT information into a single object
     const nft = {
         tokenId: tokenId,
         owner: tokenOwner,
@@ -122,8 +131,9 @@ export default async function getNft(req, res, tradingContract, tradingContractA
         isListed: listing != null,
         isOnAuction: auction != null,
         isOnDutchAuction: dutchAuction != null
-    }
+    };
 
+    // Render the NFT detail page with relevant data
     res.render("singleNft/nft", {
         nft: nft, 
         isLoggedIn: userAddress ? true : false,
