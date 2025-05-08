@@ -103,7 +103,7 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
   );
   console.log(`${time()} ✅ Successfully deployed website at: localhost:3000`);
 
-  console.log(`${time()} {\n 🚀 Script finished successfully!\n    - ERC721 Contract launched\n    - Trading Contract launched\n    - All NFT's minted \n    - Trading Contract approved to trade NFT's\n    - Event Listener setup and MongoDB connected\n}`);
+  console.log(`${time()} {\n 🚀 Script finished successfully!\n    - ERC721 Contract launched\n    - Trading Contract launched\n    - Event Listener setup and MongoDB connected\n}`);
 }
   
 fetchAndMintPokemons(ownerAddress, 100).catch(console.error);
