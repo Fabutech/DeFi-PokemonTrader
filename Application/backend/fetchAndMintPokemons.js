@@ -78,16 +78,20 @@ async function fetchAndMintPokemons(ownerAddress, numbOfPokemons) {
   const nftContract = await deployNFTContract(signer);
   console.log(`${time()} 🚀 Contract deployed at: ${await nftContract.getAddress()} Owner: ${ownerAddress}`);
 
+  // Deploy new Trading contract on the local hardhat testnet
   console.log(`${time()} Deploying Trading Contract...`);
   const tradingContract = await deployTradingContract(signer, await nftContract.getAddress());
   console.log(`${time()} ✅ Trading contract is deployed to: ${await tradingContract.getAddress()}`);
 
+  // Connect to MongoDB
   connectMongoDB();
 
+  // Setup Event Listener to save events to MongoDB
   console.log(`${time()} Starting to setup contract event listener`);
   await setupEventListener(DB, await nftContract.getAddress(), ERC721_JSON.abi, await tradingContract.getAddress(), TRADING_JSON.abi, true);
   console.log(`${time()} ✅ Successfully setup event listener`);
 
+  // Run nodejs webserver
   console.log(`${time()} Deploying Frontend website...`);
   runApp(
     DB,
@@ -106,6 +110,7 @@ fetchAndMintPokemons(ownerAddress, 100).catch(console.error);
 
 async function connectMongoDB() {
   try {
+    // DB-Login would belong in a .env file but for testing purposes we hardcode it
     await mongoose.connect("mongodb+srv://fabutech:Bv25L4aRFgGHchiX@defi-db.7ary1.mongodb.net", {
       useNewUrlParser: true,
       useUnifiedTopology: true

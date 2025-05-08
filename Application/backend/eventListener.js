@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: "../.env"});
 
+// Adds all event listeners to save events to the database
 export async function setupEventListener(DB, nftContractAddress, nftContractABI, tradingContractAddress, tradingContractABI, wipeDB = false) {    
     if (wipeDB) {
       await DB.ownership.deleteMany({})
